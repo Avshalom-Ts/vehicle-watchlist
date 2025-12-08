@@ -1,0 +1,92 @@
+version: "3.8"
+
+services:
+  # MongoDB Database
+  mongodb:
+    image: mongo:7
+    container_name: vehicle-watchlist-mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_DATABASE: vehicle-watchlist
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - vehicle-watchlist-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # NestJS Backend API
+  server:
+    image: ghcr.io/Avshalom-Ts/vehicle-watchlist-server:latest
+    container_name: vehicle-watchlist-server
+    restart: unless-stopped
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    environment:
+      - MONGO_URI=mongodb://mongodb:27017/vehicle-watchlist
+      - JWT_SECRET=${JWT_SECRET:-jwt-secret-key}
+      - JWT_EXPIRES_IN=${JWT_EXPIRES_IN:-7d}
+      - RESOURCE_ID=${RESOURCE_ID}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID}
+      - GITHUB_CLIENT_SECRET=${GITHUB_CLIENT_SECRET}
+      - PORT=3000
+    ports:
+      - "3000:3000"
+    networks:
+      - vehicle-watchlist-network
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "--quiet",
+          "--tries=1",
+          "--spider",
+          "http://localhost:3000/health",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Next.js Frontend Client
+  client:
+    image: ghcr.io/Avshalom-Ts/vehicle-watchlist-client:latest
+    container_name: vehicle-watchlist-client
+    restart: unless-stopped
+    depends_on:
+      - server
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:3000/api
+    ports:
+      - "4200:3000"
+    networks:
+      - vehicle-watchlist-network
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "--quiet",
+          "--tries=1",
+          "--spider",
+          "http://localhost:3000",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+networks:
+  vehicle-watchlist-network:
+    driver: bridge
+
+volumes:
+  mongodb_data:
+    driver: local
