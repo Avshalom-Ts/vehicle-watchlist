@@ -6,9 +6,13 @@
   "private": true,
   "dependencies": {
     "@nestjs/common": "^11.0.0",
+    "@nestjs/config": "^4.0.2",
     "@nestjs/core": "^11.0.0",
+    "@nestjs/mongoose": "^11.0.3",
     "@nestjs/platform-express": "^11.0.0",
     "axios": "^1.6.0",
+    "mongodb-memory-server": "^10.4.1",
+    "mongoose": "^9.0.1",
     "next": "~16.0.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
