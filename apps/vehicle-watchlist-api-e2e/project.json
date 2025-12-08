@@ -1,0 +1,20 @@
+{
+  "name": "vehicle-watchlist-api-e2e",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "implicitDependencies": ["vehicle-watchlist-api"],
+  "targets": {
+    "e2e": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{e2eProjectRoot}"],
+      "options": {
+        "jestConfig": "apps/vehicle-watchlist-api-e2e/jest.config.cts",
+        "passWithNoTests": true
+      },
+      "dependsOn": [
+        "vehicle-watchlist-api:build",
+        "vehicle-watchlist-api:serve"
+      ]
+    }
+  }
+}
