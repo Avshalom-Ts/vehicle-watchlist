@@ -6,7 +6,7 @@ WORKDIR /app
 RUN npm install -g bun
 
 # Copy package files
-COPY package.json bun.lockb ./
+COPY package.json bun.lock ./
 COPY nx.json tsconfig.base.json ./
 
 # Install dependencies
@@ -26,44 +26,21 @@ COPY --from=deps /app/package.json ./package.json
 # Copy source code
 COPY . .
 
-# Build the Next.js application
+# Build the Next.js application - NX outputs to .next in the app folder
 ENV NEXT_TELEMETRY_DISABLED=1
-RUN bun run nx build vehicle-watchlist-ui --prod
+RUN bun run nx build vehicle-watchlist-ui
 
 # Stage 3: Runner
-FROM node:20-alpine AS runner
-WORKDIR /app
+FROM nginx:alpine AS runner
 
-# Install Bun
-RUN npm install -g bun
+# Copy Next.js static export files from .next folder
+COPY --from=builder /app/dist/apps/vehicle-watchlist-ui/.next /usr/share/nginx/html
 
-ENV NODE_ENV=production
-ENV NEXT_TELEMETRY_DISABLED=1
-
-# Create non-root user
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
-
-# Copy built application
-COPY --from=builder /app/dist/apps/vehicle-watchlist-ui/.next/standalone ./
-COPY --from=builder /app/dist/apps/vehicle-watchlist-ui/.next/static ./dist/apps/vehicle-watchlist-ui/.next/static
-COPY --from=builder /app/dist/apps/vehicle-watchlist-ui/public ./dist/apps/vehicle-watchlist-ui/public
-
-# If the build output is different, adjust accordingly
-# For standard Next.js output in Nx:
-COPY --from=builder --chown=nextjs:nodejs /app/dist/apps/vehicle-watchlist-ui/.next ./.next
-COPY --from=builder --chown=nextjs:nodejs /app/apps/vehicle-watchlist-ui/public ./public
-COPY --from=builder --chown=nextjs:nodejs /app/apps/vehicle-watchlist-ui/package.json ./package.json
-
-# Switch to non-root user
-USER nextjs
+# Copy nginx config
+COPY docker/frontent/nginx.conf /etc/nginx/conf.d/default.conf
 
 # Expose port
-EXPOSE 3000
+EXPOSE 4200
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD node -e "require('http').get('http://localhost:3000', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
-
-# Start the application
-CMD ["node", "server.js"]
+# Start nginx
+CMD ["nginx", "-g", "daemon off;"]

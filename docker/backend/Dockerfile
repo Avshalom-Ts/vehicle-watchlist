@@ -6,7 +6,7 @@ WORKDIR /app
 RUN npm install -g bun
 
 # Copy package files
-COPY package.json bun.lockb ./
+COPY package.json bun.lock ./
 COPY nx.json tsconfig.base.json ./
 
 # Install dependencies
