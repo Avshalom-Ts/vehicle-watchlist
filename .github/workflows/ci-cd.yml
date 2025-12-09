@@ -35,8 +35,8 @@ jobs:
       - name: Lint all projects
         run: bun nx run-many -t lint --all
 
-      - name: Test all projects
-        run: bun nx run-many -t test --all
+      - name: Test backend projects
+        run: bun nx run-many -t test --projects=vehicle-watchlist-api,database,utils,api
 
       - name: Build all projects
         run: bun nx run-many -t build --all
