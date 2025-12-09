@@ -20,15 +20,20 @@
         "name": "next"
       }
     ],
-    "types": ["jest", "node"]
+    "types": ["jest", "node"],
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"],
+      "@vehicle-watchlist/database": ["../../libs/database/src/index.ts"],
+      "@vehicle-watchlist/utils": ["../../libs/utils/src/index.ts"],
+      "@vehicle-watchlist/api": ["../../libs/api/src/index.ts"]
+    }
   },
   "include": [
     "**/*.ts",
     "**/*.tsx",
     "**/*.js",
     "**/*.jsx",
-    "../../apps/vehicle-watchlist-ui/.next/types/**/*.ts",
-    "../../dist/apps/vehicle-watchlist-ui/.next/types/**/*.ts",
     "next-env.d.ts"
   ],
   "exclude": [
