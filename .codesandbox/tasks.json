@@ -1,0 +1,33 @@
+{
+  "$schema": "https://codesandbox.io/schemas/tasks.json",
+  "setupTasks": [
+    {
+      "name": "Install Dependencies",
+      "command": "npm install -g bun && bun install && cp -n .env.example .env 2>/dev/null || true"
+    }
+  ],
+  "tasks": {
+    "dev": {
+      "name": "Development Server",
+      "command": "bun nx run-many -t serve --projects=vehicle-watchlist-api,vehicle-watchlist-ui --parallel",
+      "runAtStart": true,
+      "preview": {
+        "port": 3000
+      }
+    },
+    "api": {
+      "name": "API Server",
+      "command": "bun nx serve vehicle-watchlist-api",
+      "preview": {
+        "port": 3002
+      }
+    },
+    "ui": {
+      "name": "UI Server",
+      "command": "bun nx serve vehicle-watchlist-ui",
+      "preview": {
+        "port": 3000
+      }
+    }
+  }
+}

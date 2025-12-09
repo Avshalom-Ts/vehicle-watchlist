@@ -52,3 +52,6 @@ out
 
 # MongoDB
 /data
+
+# Tasks
+BRANCH_TASKS.md
