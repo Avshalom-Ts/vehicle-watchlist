@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { toast } from 'sonner';
@@ -24,6 +24,7 @@ export default function RegisterPage() {
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false);
     const [errors, setErrors] = useState<{
         name?: string;
         email?: string;
@@ -31,14 +32,24 @@ export default function RegisterPage() {
         confirmPassword?: string;
     }>({});
 
+    useEffect(() => {
+        // Redirect to dashboard if already logged in
+        if (AuthService.isAuthenticated()) {
+            router.push('/dashboard');
+        }
+    }, [router]);
+
     const validateForm = (): boolean => {
         const newErrors: typeof errors = {};
+        const trimmedEmail = email.trim();
 
         if (name.length < 2) {
             newErrors.name = 'Name must be at least 2 characters';
         }
 
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        if (trimmedEmail.length === 0) {
+            newErrors.email = 'Email is required';
+        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
             newErrors.email = 'Invalid email address';
         }
 
@@ -52,7 +63,9 @@ export default function RegisterPage() {
             newErrors.password = 'Password must contain at least one number';
         }
 
-        if (password !== confirmPassword) {
+        if (confirmPassword.length === 0) {
+            newErrors.confirmPassword = 'Please confirm your password';
+        } else if (password !== confirmPassword) {
             newErrors.confirmPassword = 'Passwords do not match';
         }
 
@@ -62,6 +75,7 @@ export default function RegisterPage() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        setHasAttemptedSubmit(true);
 
         if (!validateForm()) {
             return;
@@ -70,21 +84,18 @@ export default function RegisterPage() {
         setIsLoading(true);
 
         try {
-            const response = await AuthService.register({
+            await AuthService.register({
                 name,
-                email,
+                email: email.trim(),
                 password,
             });
 
             toast.success('Account created successfully!');
 
             // Redirect to dashboard after successful registration
-            setTimeout(() => {
-                router.push('/dashboard');
-            }, 1000);
+            router.push('/dashboard');
         } catch (error) {
             toast.error(error instanceof Error ? error.message : 'Registration failed. Please try again.');
-        } finally {
             setIsLoading(false);
         }
     };
@@ -111,9 +122,10 @@ export default function RegisterPage() {
                                 value={name}
                                 onChange={(e) => {
                                     setName(e.target.value);
-                                    setErrors({ ...errors, name: undefined });
+                                    if (hasAttemptedSubmit) {
+                                        setErrors({ ...errors, name: undefined });
+                                    }
                                 }}
-                                required
                                 disabled={isLoading}
                                 className={errors.name ? 'border-red-500' : ''}
                             />
@@ -125,14 +137,18 @@ export default function RegisterPage() {
                             <Label htmlFor="email">Email</Label>
                             <Input
                                 id="email"
-                                type="email"
+                                type="text"
                                 placeholder="name@example.com"
                                 value={email}
                                 onChange={(e) => {
                                     setEmail(e.target.value);
-                                    setErrors({ ...errors, email: undefined });
+                                    if (hasAttemptedSubmit) {
+                                        setErrors({ ...errors, email: undefined });
+                                    }
                                 }}
-                                required
+                                onBlur={(e) => {
+                                    setEmail(e.target.value.trim());
+                                }}
                                 disabled={isLoading}
                                 className={errors.email ? 'border-red-500' : ''}
                             />
@@ -149,9 +165,10 @@ export default function RegisterPage() {
                                 value={password}
                                 onChange={(e) => {
                                     setPassword(e.target.value);
-                                    setErrors({ ...errors, password: undefined });
+                                    if (hasAttemptedSubmit) {
+                                        setErrors({ ...errors, password: undefined });
+                                    }
                                 }}
-                                required
                                 disabled={isLoading}
                                 className={errors.password ? 'border-red-500' : ''}
                             />
@@ -171,9 +188,10 @@ export default function RegisterPage() {
                                 value={confirmPassword}
                                 onChange={(e) => {
                                     setConfirmPassword(e.target.value);
-                                    setErrors({ ...errors, confirmPassword: undefined });
+                                    if (hasAttemptedSubmit) {
+                                        setErrors({ ...errors, confirmPassword: undefined });
+                                    }
                                 }}
-                                required
                                 disabled={isLoading}
                                 className={errors.confirmPassword ? 'border-red-500' : ''}
                             />

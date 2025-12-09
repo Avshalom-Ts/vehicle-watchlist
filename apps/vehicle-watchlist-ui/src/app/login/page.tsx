@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { toast } from 'sonner';
@@ -22,15 +22,26 @@ export default function LoginPage() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false);
     const [errors, setErrors] = useState<{
         email?: string;
         password?: string;
     }>({});
 
+    useEffect(() => {
+        // Redirect to dashboard if already logged in
+        if (AuthService.isAuthenticated()) {
+            router.push('/dashboard');
+        }
+    }, [router]);
+
     const validateForm = (): boolean => {
         const newErrors: typeof errors = {};
+        const trimmedEmail = email.trim();
 
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        if (trimmedEmail.length === 0) {
+            newErrors.email = 'Email is required';
+        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
             newErrors.email = 'Invalid email address';
         }
 
@@ -44,6 +55,7 @@ export default function LoginPage() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        setHasAttemptedSubmit(true);
 
         if (!validateForm()) {
             return;
@@ -52,20 +64,17 @@ export default function LoginPage() {
         setIsLoading(true);
 
         try {
-            const response = await AuthService.login({
-                email,
+            await AuthService.login({
+                email: email.trim(),
                 password,
             });
 
-            toast.success('Signed in successfully!');
+            toast.success('Welcome back!');
 
             // Redirect to dashboard after successful login
-            setTimeout(() => {
-                router.push('/dashboard');
-            }, 1000);
+            router.push('/dashboard');
         } catch (error) {
             toast.error(error instanceof Error ? error.message : 'Login failed. Please check your credentials.');
-        } finally {
             setIsLoading(false);
         }
     };
@@ -87,14 +96,18 @@ export default function LoginPage() {
                             <Label htmlFor="email">Email</Label>
                             <Input
                                 id="email"
-                                type="email"
+                                type="text"
                                 placeholder="name@example.com"
                                 value={email}
                                 onChange={(e) => {
                                     setEmail(e.target.value);
-                                    setErrors({ ...errors, email: undefined });
+                                    if (hasAttemptedSubmit) {
+                                        setErrors({ ...errors, email: undefined });
+                                    }
                                 }}
-                                required
+                                onBlur={(e) => {
+                                    setEmail(e.target.value.trim());
+                                }}
                                 disabled={isLoading}
                                 className={errors.email ? 'border-red-500' : ''}
                             />
@@ -111,9 +124,10 @@ export default function LoginPage() {
                                 value={password}
                                 onChange={(e) => {
                                     setPassword(e.target.value);
-                                    setErrors({ ...errors, password: undefined });
+                                    if (hasAttemptedSubmit) {
+                                        setErrors({ ...errors, password: undefined });
+                                    }
                                 }}
-                                required
                                 disabled={isLoading}
                                 className={errors.password ? 'border-red-500' : ''}
                             />

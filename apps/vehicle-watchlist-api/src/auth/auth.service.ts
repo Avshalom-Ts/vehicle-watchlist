@@ -19,7 +19,7 @@ export class AuthService {
      * @param password User's password
      * @returns The user object without password if valid, otherwise null
      */
-    async validateUser(email: string, password: string): Promise<Omit<any, 'password'> | null> {
+    async validateUser(email: string, password: string): Promise<Omit<Record<string, unknown>, 'password'> | null> {
         const user = await this.usersService.findOneByEmail(email);
         if (!user) {
             return null;
@@ -51,7 +51,7 @@ export class AuthService {
             throw new UnauthorizedException('Invalid credentials');
         }
 
-        const tokens = await this.generateTokens(user['_id'].toString(), user['email'], user['name']);
+        const tokens = await this.generateTokens(user['_id'].toString(), user['email'] as string, user['name'] as string);
         await this.usersService.updateRefreshToken(user['_id'].toString(), tokens.refresh_token);
 
         return {
@@ -59,8 +59,8 @@ export class AuthService {
             refresh_token: tokens.refresh_token,
             user: {
                 id: user['_id'].toString(),
-                email: user['email'],
-                name: user['name']
+                email: user['email'] as string,
+                name: user['name'] as string
             },
         };
     }
@@ -162,7 +162,7 @@ export class AuthService {
                     name: user.name,
                 },
             };
-        } catch (error) {
+        } catch {
             throw new UnauthorizedException('Invalid refresh token');
         }
     }

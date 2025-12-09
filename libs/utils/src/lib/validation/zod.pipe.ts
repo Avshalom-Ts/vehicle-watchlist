@@ -22,8 +22,10 @@ export class ZodValidationPipe {
 
 // Decorator to use Zod schema validation
 export function UsePipes(schema: z.ZodSchema) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
         const originalMethod = descriptor.value;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         descriptor.value = async function (...args: any[]) {
             const validatedArgs = args.map((arg) => {
                 return schema.parse(arg);

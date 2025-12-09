@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { Car, User, LogOut } from 'lucide-react';
@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 
 export function Navbar() {
     const router = useRouter();
+    const pathname = usePathname();
     const [user, setUser] = useState<{ id: string; email: string; name: string } | null>(null);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
 
@@ -21,6 +22,8 @@ export function Navbar() {
             setIsAuthenticated(authenticated);
             if (authenticated) {
                 setUser(AuthService.getUser());
+            } else {
+                setUser(null);
             }
         };
 
@@ -29,14 +32,14 @@ export function Navbar() {
         // Listen for storage changes (login/logout in other tabs)
         window.addEventListener('storage', checkAuth);
         return () => window.removeEventListener('storage', checkAuth);
-    }, []);
+    }, [pathname]); // Re-check auth when route changes
 
     const handleLogout = () => {
         AuthService.logout();
         setIsAuthenticated(false);
         setUser(null);
         toast.success('Logged out successfully');
-        router.push('/');
+        router.push('/login');
     };
 
     return (

@@ -7,6 +7,7 @@ const createJestConfig = nextJest({
 const config = {
   displayName: 'vehicle-watchlist-ui',
   preset: '../../jest.preset.js',
+  setupFilesAfterEnv: ['<rootDir>/specs/setup.ts'],
   transform: {
     '^(?!.*\\.(js|jsx|ts|tsx|css|json)$)': '@nx/react/plugins/jest',
   },

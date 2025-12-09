@@ -19,9 +19,8 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
      * Handle the request after authentication
      * @param err An error object if authentication failed
      * @param user The authenticated user object
-     * @param info Additional information about the authentication
      */
-    override handleRequest(err: any, user: any, info: any) {
+    override handleRequest<TUser = Express.User>(err: Error | null, user: TUser | false): TUser {
         if (err || !user) {
             throw err || new UnauthorizedException('Invalid or expired token');
         }
