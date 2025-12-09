@@ -1,0 +1,333 @@
+import React from 'react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
+import RegisterPage from '../src/app/register/page';
+import { AuthService } from '../src/lib/auth-service';
+
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
+
+// Mock dependencies
+jest.mock('next/navigation', () => ({
+    useRouter: jest.fn(),
+}));
+
+jest.mock('sonner', () => ({
+    toast: {
+        success: jest.fn(),
+        error: jest.fn(),
+    },
+}));
+
+jest.mock('../src/lib/auth-service', () => ({
+    AuthService: {
+        register: jest.fn(),
+    },
+}));
+
+describe('RegisterPage', () => {
+    const mockPush = jest.fn();
+    const mockRouter = {
+        push: mockPush,
+    };
+
+    beforeEach(() => {
+        jest.clearAllMocks();
+        (useRouter as jest.Mock).mockReturnValue(mockRouter);
+    });
+
+    it('should render registration form', () => {
+        render(<RegisterPage />);
+
+        expect(screen.getByRole('heading', { name: /create account/i })).toBeInTheDocument();
+        expect(screen.getByLabelText(/name/i)).toBeInTheDocument();
+        expect(screen.getByLabelText(/^email$/i)).toBeInTheDocument();
+        expect(screen.getByLabelText(/^password$/i)).toBeInTheDocument();
+        expect(screen.getByLabelText(/confirm password/i)).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /create account/i })).toBeInTheDocument();
+    });
+
+    it('should show validation error for short name', async () => {
+        render(<RegisterPage />);
+
+        const nameInput = screen.getByLabelText(/full name/i);
+        const form = screen.getByRole('button', { name: /create account/i }).closest('form')!;
+
+        fireEvent.change(nameInput, { target: { value: 'A' } });
+        fireEvent.submit(form);
+
+        await waitFor(() => {
+            expect(screen.getByText(/name must be at least 2 characters/i)).toBeInTheDocument();
+        });
+
+        expect(AuthService.register).not.toHaveBeenCalled();
+    });
+
+    it('should show validation error for invalid email', async () => {
+        render(<RegisterPage />);
+
+        const nameInput = screen.getByLabelText(/name/i);
+        const emailInput = screen.getByLabelText(/^email$/i);
+        const form = screen.getByRole('button', { name: /create account/i }).closest('form')!;
+
+        fireEvent.change(nameInput, { target: { value: 'Test User' } });
+        fireEvent.change(emailInput, { target: { value: 'invalid-email' } });
+        fireEvent.submit(form);
+
+        await waitFor(() => {
+            expect(screen.getByText(/invalid email address/i)).toBeInTheDocument();
+        });
+
+        expect(AuthService.register).not.toHaveBeenCalled();
+    });
+
+    it('should show validation error for short password', async () => {
+        render(<RegisterPage />);
+
+        const nameInput = screen.getByLabelText(/name/i);
+        const emailInput = screen.getByLabelText(/^email$/i);
+        const passwordInput = screen.getByLabelText(/^password$/i);
+        const form = screen.getByRole('button', { name: /create account/i }).closest('form')!;
+
+        fireEvent.change(nameInput, { target: { value: 'Test User' } });
+        fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
+        fireEvent.change(passwordInput, { target: { value: 'short' } });
+        fireEvent.submit(form);
+
+        await waitFor(() => {
+            expect(screen.getByText(/password must be at least 8 characters/i)).toBeInTheDocument();
+        });
+
+        expect(AuthService.register).not.toHaveBeenCalled();
+    });
+
+    it('should show validation error for password without uppercase', async () => {
+        render(<RegisterPage />);
+
+        const nameInput = screen.getByLabelText(/name/i);
+        const emailInput = screen.getByLabelText(/^email$/i);
+        const passwordInput = screen.getByLabelText(/^password$/i);
+        const form = screen.getByRole('button', { name: /create account/i }).closest('form')!;
+
+        fireEvent.change(nameInput, { target: { value: 'Test User' } });
+        fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
+        fireEvent.change(passwordInput, { target: { value: 'test1234' } });
+        fireEvent.submit(form);
+
+        await waitFor(() => {
+            expect(screen.getByText(/password must contain at least one uppercase letter/i)).toBeInTheDocument();
+        });
+
+        expect(AuthService.register).not.toHaveBeenCalled();
+    });
+
+    it('should show validation error for password without lowercase', async () => {
+        render(<RegisterPage />);
+
+        const nameInput = screen.getByLabelText(/name/i);
+        const emailInput = screen.getByLabelText(/^email$/i);
+        const passwordInput = screen.getByLabelText(/^password$/i);
+        const form = screen.getByRole('button', { name: /create account/i }).closest('form')!;
+
+        fireEvent.change(nameInput, { target: { value: 'Test User' } });
+        fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
+        fireEvent.change(passwordInput, { target: { value: 'TEST1234' } });
+        fireEvent.submit(form);
+
+        await waitFor(() => {
+            expect(screen.getByText(/password must contain at least one lowercase letter/i)).toBeInTheDocument();
+        });
+
+        expect(AuthService.register).not.toHaveBeenCalled();
+    });
+
+    it('should show validation error for password without number', async () => {
+        render(<RegisterPage />);
+
+        const nameInput = screen.getByLabelText(/name/i);
+        const emailInput = screen.getByLabelText(/^email$/i);
+        const passwordInput = screen.getByLabelText(/^password$/i);
+        const form = screen.getByRole('button', { name: /create account/i }).closest('form')!;
+
+        fireEvent.change(nameInput, { target: { value: 'Test User' } });
+        fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
+        fireEvent.change(passwordInput, { target: { value: 'TestTest' } });
+        fireEvent.submit(form);
+
+        await waitFor(() => {
+            expect(screen.getByText(/password must contain at least one number/i)).toBeInTheDocument();
+        });
+
+        expect(AuthService.register).not.toHaveBeenCalled();
+    });
+
+    it('should show validation error for mismatched passwords', async () => {
+        render(<RegisterPage />);
+
+        const nameInput = screen.getByLabelText(/name/i);
+        const emailInput = screen.getByLabelText(/^email$/i);
+        const passwordInput = screen.getByLabelText(/^password$/i);
+        const confirmPasswordInput = screen.getByLabelText(/confirm password/i);
+        const form = screen.getByRole('button', { name: /create account/i }).closest('form')!;
+
+        fireEvent.change(nameInput, { target: { value: 'Test User' } });
+        fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
+        fireEvent.change(passwordInput, { target: { value: 'Test1234' } });
+        fireEvent.change(confirmPasswordInput, { target: { value: 'Test5678' } });
+        fireEvent.submit(form);
+
+        await waitFor(() => {
+            expect(screen.getByText(/passwords do not match/i)).toBeInTheDocument();
+        });
+
+        expect(AuthService.register).not.toHaveBeenCalled();
+    });
+
+    it('should submit form with valid data', async () => {
+        const mockResponse = {
+            access_token: 'mock-token',
+            refresh_token: 'mock-refresh',
+            user: {
+                id: '123',
+                email: 'test@example.com',
+                name: 'Test User',
+            },
+        };
+
+        (AuthService.register as jest.Mock).mockResolvedValueOnce(mockResponse);
+
+        render(<RegisterPage />);
+
+        const nameInput = screen.getByLabelText(/name/i);
+        const emailInput = screen.getByLabelText(/^email$/i);
+        const passwordInput = screen.getByLabelText(/^password$/i);
+        const confirmPasswordInput = screen.getByLabelText(/confirm password/i);
+        const submitButton = screen.getByRole('button', { name: /create account/i });
+
+        fireEvent.change(nameInput, { target: { value: 'Test User' } });
+        fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
+        fireEvent.change(passwordInput, { target: { value: 'Test1234' } });
+        fireEvent.change(confirmPasswordInput, { target: { value: 'Test1234' } });
+        fireEvent.click(submitButton);
+
+        await waitFor(() => {
+            expect(AuthService.register).toHaveBeenCalledWith({
+                name: 'Test User',
+                email: 'test@example.com',
+                password: 'Test1234',
+            });
+        });
+
+        expect(toast.success).toHaveBeenCalledWith('Account created successfully!');
+
+        await waitFor(() => {
+            expect(mockPush).toHaveBeenCalledWith('/dashboard');
+        }, { timeout: 1500 });
+    });
+
+    it('should show error toast on registration failure', async () => {
+        (AuthService.register as jest.Mock).mockRejectedValueOnce(new Error('Email already exists'));
+
+        render(<RegisterPage />);
+
+        const nameInput = screen.getByLabelText(/name/i);
+        const emailInput = screen.getByLabelText(/^email$/i);
+        const passwordInput = screen.getByLabelText(/^password$/i);
+        const confirmPasswordInput = screen.getByLabelText(/confirm password/i);
+        const submitButton = screen.getByRole('button', { name: /create account/i });
+
+        fireEvent.change(nameInput, { target: { value: 'Test User' } });
+        fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
+        fireEvent.change(passwordInput, { target: { value: 'Test1234' } });
+        fireEvent.change(confirmPasswordInput, { target: { value: 'Test1234' } });
+        fireEvent.click(submitButton);
+
+        await waitFor(() => {
+            expect(toast.error).toHaveBeenCalledWith('Email already exists');
+        });
+
+        expect(mockPush).not.toHaveBeenCalled();
+    });
+
+    it('should disable form during submission', async () => {
+        (AuthService.register as jest.Mock).mockImplementation(
+            () => new Promise(resolve => setTimeout(resolve, 100))
+        );
+
+        render(<RegisterPage />);
+
+        const nameInput = screen.getByLabelText(/name/i);
+        const emailInput = screen.getByLabelText(/^email$/i);
+        const passwordInput = screen.getByLabelText(/^password$/i);
+        const confirmPasswordInput = screen.getByLabelText(/confirm password/i);
+        const submitButton = screen.getByRole('button', { name: /create account/i });
+
+        fireEvent.change(nameInput, { target: { value: 'Test User' } });
+        fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
+        fireEvent.change(passwordInput, { target: { value: 'Test1234' } });
+        fireEvent.change(confirmPasswordInput, { target: { value: 'Test1234' } });
+        fireEvent.click(submitButton);
+
+        expect(nameInput).toBeDisabled();
+        expect(emailInput).toBeDisabled();
+        expect(passwordInput).toBeDisabled();
+        expect(confirmPasswordInput).toBeDisabled();
+        expect(submitButton).toBeDisabled();
+
+        await waitFor(() => {
+            expect(nameInput).not.toBeDisabled();
+        });
+    });
+
+    it('should have link to login page', () => {
+        render(<RegisterPage />);
+
+        const loginLink = screen.getByText(/sign in/i);
+        expect(loginLink).toBeInTheDocument();
+        expect(loginLink.closest('a')).toHaveAttribute('href', '/login');
+    });
+
+    it('should clear field errors when user types', async () => {
+        render(<RegisterPage />);
+
+        const nameInput = screen.getByLabelText(/name/i);
+        const form = screen.getByRole('button', { name: /create account/i }).closest('form')!;
+
+        // Trigger validation error
+        fireEvent.change(nameInput, { target: { value: 'A' } });
+        fireEvent.submit(form);
+
+        await waitFor(() => {
+            expect(screen.getByText(/name must be at least 2 characters/i)).toBeInTheDocument();
+        });
+
+        // Clear error by typing
+        fireEvent.change(nameInput, { target: { value: 'Test User' } });
+
+        await waitFor(() => {
+            expect(screen.queryByText(/name must be at least 2 characters/i)).not.toBeInTheDocument();
+        });
+    });
+
+    it('should handle generic error message', async () => {
+        (AuthService.register as jest.Mock).mockRejectedValueOnce('Unknown error');
+
+        render(<RegisterPage />);
+
+        const nameInput = screen.getByLabelText(/name/i);
+        const emailInput = screen.getByLabelText(/^email$/i);
+        const passwordInput = screen.getByLabelText(/^password$/i);
+        const confirmPasswordInput = screen.getByLabelText(/confirm password/i);
+        const submitButton = screen.getByRole('button', { name: /create account/i });
+
+        fireEvent.change(nameInput, { target: { value: 'Test User' } });
+        fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
+        fireEvent.change(passwordInput, { target: { value: 'Test1234' } });
+        fireEvent.change(confirmPasswordInput, { target: { value: 'Test1234' } });
+        fireEvent.click(submitButton);
+
+        await waitFor(() => {
+            expect(toast.error).toHaveBeenCalledWith('Registration failed. Please try again.');
+        });
+    });
+});

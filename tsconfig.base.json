@@ -14,7 +14,11 @@
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
-    "paths": {}
+    "paths": {
+      "@vehicle-watchlist/database": ["libs/database/src/index.ts"],
+      "@vehicle-watchlist/utils": ["libs/utils/src/index.ts"],
+      "@vehicle-watchlist/api": ["libs/api/src/index.ts"]
+    }
   },
   "exclude": ["node_modules", "tmp"]
 }
