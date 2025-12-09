@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { BadRequestException } from '@nestjs/common';
 
 // Zod validation pipe for NestJS
 export class ZodValidationPipe {
@@ -9,7 +10,10 @@ export class ZodValidationPipe {
             return this.schema.parse(value);
         } catch (error) {
             if (error instanceof z.ZodError) {
-                throw new Error(`Validation failed: ${JSON.stringify(error.issues)}`);
+                throw new BadRequestException({
+                    message: 'Validation failed',
+                    errors: error.issues,
+                });
             }
             throw error;
         }
