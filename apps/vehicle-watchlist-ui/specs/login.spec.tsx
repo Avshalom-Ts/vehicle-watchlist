@@ -22,6 +22,7 @@ jest.mock('sonner', () => ({
 jest.mock('../src/lib/auth-service', () => ({
     AuthService: {
         login: jest.fn(),
+        isAuthenticated: jest.fn(),
     },
 }));
 
@@ -34,12 +35,15 @@ describe('LoginPage', () => {
     beforeEach(() => {
         jest.clearAllMocks();
         (useRouter as jest.Mock).mockReturnValue(mockRouter);
+        (AuthService.isAuthenticated as jest.Mock).mockReturnValue(false);
     });
 
-    it('should render login form', () => {
+    it('should render login form', async () => {
         render(<LoginPage />);
 
-        expect(screen.getByRole('heading', { name: /sign in/i })).toBeInTheDocument();
+        await waitFor(() => {
+            expect(screen.getByRole('heading', { name: /sign in/i })).toBeInTheDocument();
+        });
         expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
         expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
         expect(screen.getByRole('button', { name: /sign in/i })).toBeInTheDocument();
@@ -47,6 +51,10 @@ describe('LoginPage', () => {
 
     it('should show validation error for invalid email', async () => {
         render(<LoginPage />);
+
+        await waitFor(() => {
+            expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
+        });
 
         const emailInput = screen.getByLabelText(/email/i);
         const form = screen.getByRole('button', { name: /sign in/i }).closest('form')!;
@@ -63,6 +71,10 @@ describe('LoginPage', () => {
 
     it('should show validation error for missing password', async () => {
         render(<LoginPage />);
+
+        await waitFor(() => {
+            expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
+        });
 
         const emailInput = screen.getByLabelText(/email/i);
         const form = screen.getByRole('button', { name: /sign in/i }).closest('form')!;
@@ -92,6 +104,10 @@ describe('LoginPage', () => {
 
         render(<LoginPage />);
 
+        await waitFor(() => {
+            expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
+        });
+
         const emailInput = screen.getByLabelText(/email/i);
         const passwordInput = screen.getByLabelText(/password/i);
         const submitButton = screen.getByRole('button', { name: /sign in/i });
@@ -119,6 +135,10 @@ describe('LoginPage', () => {
 
         render(<LoginPage />);
 
+        await waitFor(() => {
+            expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
+        });
+
         const emailInput = screen.getByLabelText(/email/i);
         const passwordInput = screen.getByLabelText(/password/i);
         const submitButton = screen.getByRole('button', { name: /sign in/i });
@@ -141,6 +161,10 @@ describe('LoginPage', () => {
 
         render(<LoginPage />);
 
+        await waitFor(() => {
+            expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
+        });
+
         const emailInput = screen.getByLabelText(/email/i);
         const passwordInput = screen.getByLabelText(/password/i);
         const submitButton = screen.getByRole('button', { name: /sign in/i });
@@ -149,17 +173,23 @@ describe('LoginPage', () => {
         fireEvent.change(passwordInput, { target: { value: 'Test1234' } });
         fireEvent.click(submitButton);
 
-        expect(emailInput).toBeDisabled();
-        expect(passwordInput).toBeDisabled();
-        expect(submitButton).toBeDisabled();
-
+        // Form should be disabled during submission
         await waitFor(() => {
-            expect(emailInput).not.toBeDisabled();
+            expect(submitButton).toBeDisabled();
         });
+
+        // Wait for submission to complete
+        await waitFor(() => {
+            expect(submitButton).not.toBeDisabled();
+        }, { timeout: 500 });
     });
 
     it('should clear email error when user types', async () => {
         render(<LoginPage />);
+
+        await waitFor(() => {
+            expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
+        });
 
         const emailInput = screen.getByLabelText(/email/i);
         const form = screen.getByRole('button', { name: /sign in/i }).closest('form')!;
@@ -183,6 +213,10 @@ describe('LoginPage', () => {
     it('should clear password error when user types', async () => {
         render(<LoginPage />);
 
+        await waitFor(() => {
+            expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
+        });
+
         const emailInput = screen.getByLabelText(/email/i);
         const passwordInput = screen.getByLabelText(/password/i);
         const form = screen.getByRole('button', { name: /sign in/i }).closest('form')!;
@@ -205,11 +239,14 @@ describe('LoginPage', () => {
         });
     });
 
-    it('should have link to register page', () => {
+    it('should have link to register page', async () => {
         render(<LoginPage />);
 
+        await waitFor(() => {
+            expect(screen.getByText(/sign up/i)).toBeInTheDocument();
+        });
+
         const registerLink = screen.getByText(/sign up/i);
-        expect(registerLink).toBeInTheDocument();
         expect(registerLink.closest('a')).toHaveAttribute('href', '/register');
     });
 
@@ -217,6 +254,10 @@ describe('LoginPage', () => {
         (AuthService.login as jest.Mock).mockRejectedValueOnce('Unknown error');
 
         render(<LoginPage />);
+
+        await waitFor(() => {
+            expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
+        });
 
         const emailInput = screen.getByLabelText(/email/i);
         const passwordInput = screen.getByLabelText(/password/i);

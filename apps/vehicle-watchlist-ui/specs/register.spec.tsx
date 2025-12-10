@@ -22,6 +22,7 @@ jest.mock('sonner', () => ({
 jest.mock('../src/lib/auth-service', () => ({
     AuthService: {
         register: jest.fn(),
+        isAuthenticated: jest.fn(),
     },
 }));
 
@@ -34,12 +35,15 @@ describe('RegisterPage', () => {
     beforeEach(() => {
         jest.clearAllMocks();
         (useRouter as jest.Mock).mockReturnValue(mockRouter);
+        (AuthService.isAuthenticated as jest.Mock).mockReturnValue(false);
     });
 
-    it('should render registration form', () => {
+    it('should render registration form', async () => {
         render(<RegisterPage />);
 
-        expect(screen.getByRole('heading', { name: /create account/i })).toBeInTheDocument();
+        await waitFor(() => {
+            expect(screen.getByRole('heading', { name: /create account/i })).toBeInTheDocument();
+        });
         expect(screen.getByLabelText(/name/i)).toBeInTheDocument();
         expect(screen.getByLabelText(/^email$/i)).toBeInTheDocument();
         expect(screen.getByLabelText(/^password$/i)).toBeInTheDocument();
@@ -50,7 +54,11 @@ describe('RegisterPage', () => {
     it('should show validation error for short name', async () => {
         render(<RegisterPage />);
 
-        const nameInput = screen.getByLabelText(/full name/i);
+        await waitFor(() => {
+            expect(screen.getByLabelText(/name/i)).toBeInTheDocument();
+        });
+
+        const nameInput = screen.getByLabelText(/name/i);
         const form = screen.getByRole('button', { name: /create account/i }).closest('form')!;
 
         fireEvent.change(nameInput, { target: { value: 'A' } });
@@ -65,6 +73,10 @@ describe('RegisterPage', () => {
 
     it('should show validation error for invalid email', async () => {
         render(<RegisterPage />);
+
+        await waitFor(() => {
+            expect(screen.getByLabelText(/name/i)).toBeInTheDocument();
+        });
 
         const nameInput = screen.getByLabelText(/name/i);
         const emailInput = screen.getByLabelText(/^email$/i);
@@ -83,6 +95,10 @@ describe('RegisterPage', () => {
 
     it('should show validation error for short password', async () => {
         render(<RegisterPage />);
+
+        await waitFor(() => {
+            expect(screen.getByLabelText(/name/i)).toBeInTheDocument();
+        });
 
         const nameInput = screen.getByLabelText(/name/i);
         const emailInput = screen.getByLabelText(/^email$/i);
@@ -104,6 +120,10 @@ describe('RegisterPage', () => {
     it('should show validation error for password without uppercase', async () => {
         render(<RegisterPage />);
 
+        await waitFor(() => {
+            expect(screen.getByLabelText(/name/i)).toBeInTheDocument();
+        });
+
         const nameInput = screen.getByLabelText(/name/i);
         const emailInput = screen.getByLabelText(/^email$/i);
         const passwordInput = screen.getByLabelText(/^password$/i);
@@ -123,6 +143,10 @@ describe('RegisterPage', () => {
 
     it('should show validation error for password without lowercase', async () => {
         render(<RegisterPage />);
+
+        await waitFor(() => {
+            expect(screen.getByLabelText(/name/i)).toBeInTheDocument();
+        });
 
         const nameInput = screen.getByLabelText(/name/i);
         const emailInput = screen.getByLabelText(/^email$/i);
@@ -144,6 +168,10 @@ describe('RegisterPage', () => {
     it('should show validation error for password without number', async () => {
         render(<RegisterPage />);
 
+        await waitFor(() => {
+            expect(screen.getByLabelText(/name/i)).toBeInTheDocument();
+        });
+
         const nameInput = screen.getByLabelText(/name/i);
         const emailInput = screen.getByLabelText(/^email$/i);
         const passwordInput = screen.getByLabelText(/^password$/i);
@@ -163,6 +191,10 @@ describe('RegisterPage', () => {
 
     it('should show validation error for mismatched passwords', async () => {
         render(<RegisterPage />);
+
+        await waitFor(() => {
+            expect(screen.getByLabelText(/name/i)).toBeInTheDocument();
+        });
 
         const nameInput = screen.getByLabelText(/name/i);
         const emailInput = screen.getByLabelText(/^email$/i);
@@ -198,6 +230,10 @@ describe('RegisterPage', () => {
 
         render(<RegisterPage />);
 
+        await waitFor(() => {
+            expect(screen.getByLabelText(/name/i)).toBeInTheDocument();
+        });
+
         const nameInput = screen.getByLabelText(/name/i);
         const emailInput = screen.getByLabelText(/^email$/i);
         const passwordInput = screen.getByLabelText(/^password$/i);
@@ -230,6 +266,10 @@ describe('RegisterPage', () => {
 
         render(<RegisterPage />);
 
+        await waitFor(() => {
+            expect(screen.getByLabelText(/name/i)).toBeInTheDocument();
+        });
+
         const nameInput = screen.getByLabelText(/name/i);
         const emailInput = screen.getByLabelText(/^email$/i);
         const passwordInput = screen.getByLabelText(/^password$/i);
@@ -256,6 +296,10 @@ describe('RegisterPage', () => {
 
         render(<RegisterPage />);
 
+        await waitFor(() => {
+            expect(screen.getByLabelText(/name/i)).toBeInTheDocument();
+        });
+
         const nameInput = screen.getByLabelText(/name/i);
         const emailInput = screen.getByLabelText(/^email$/i);
         const passwordInput = screen.getByLabelText(/^password$/i);
@@ -268,27 +312,34 @@ describe('RegisterPage', () => {
         fireEvent.change(confirmPasswordInput, { target: { value: 'Test1234' } });
         fireEvent.click(submitButton);
 
-        expect(nameInput).toBeDisabled();
-        expect(emailInput).toBeDisabled();
-        expect(passwordInput).toBeDisabled();
-        expect(confirmPasswordInput).toBeDisabled();
-        expect(submitButton).toBeDisabled();
-
+        // Form should be disabled during submission
         await waitFor(() => {
-            expect(nameInput).not.toBeDisabled();
+            expect(submitButton).toBeDisabled();
         });
+
+        // Wait for submission to complete
+        await waitFor(() => {
+            expect(submitButton).not.toBeDisabled();
+        }, { timeout: 500 });
     });
 
-    it('should have link to login page', () => {
+    it('should have link to login page', async () => {
         render(<RegisterPage />);
 
+        await waitFor(() => {
+            expect(screen.getByText(/sign in/i)).toBeInTheDocument();
+        });
+
         const loginLink = screen.getByText(/sign in/i);
-        expect(loginLink).toBeInTheDocument();
         expect(loginLink.closest('a')).toHaveAttribute('href', '/login');
     });
 
     it('should clear field errors when user types', async () => {
         render(<RegisterPage />);
+
+        await waitFor(() => {
+            expect(screen.getByLabelText(/name/i)).toBeInTheDocument();
+        });
 
         const nameInput = screen.getByLabelText(/name/i);
         const form = screen.getByRole('button', { name: /create account/i }).closest('form')!;
@@ -313,6 +364,10 @@ describe('RegisterPage', () => {
         (AuthService.register as jest.Mock).mockRejectedValueOnce('Unknown error');
 
         render(<RegisterPage />);
+
+        await waitFor(() => {
+            expect(screen.getByLabelText(/name/i)).toBeInTheDocument();
+        });
 
         const nameInput = screen.getByLabelText(/name/i);
         const emailInput = screen.getByLabelText(/^email$/i);

@@ -1,7 +1,8 @@
 'use client';
 
+import React from 'react';
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -19,6 +20,8 @@ import { AuthService } from '@/lib/auth-service';
 
 export default function LoginPage() {
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const redirectUrl = searchParams.get('redirect') || '/dashboard';
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -71,8 +74,8 @@ export default function LoginPage() {
 
             toast.success('Welcome back!');
 
-            // Redirect to dashboard after successful login
-            router.push('/dashboard');
+            // Redirect to the intended page or dashboard after successful login
+            router.push(redirectUrl);
         } catch (error) {
             toast.error(error instanceof Error ? error.message : 'Login failed. Please check your credentials.');
             setIsLoading(false);
@@ -147,7 +150,7 @@ export default function LoginPage() {
                         <p className="text-sm text-center text-muted-foreground">
                             Don't have an account?{' '}
                             <Link
-                                href="/register"
+                                href={redirectUrl !== '/dashboard' ? `/register?redirect=${encodeURIComponent(redirectUrl)}` : '/register'}
                                 className="text-primary hover:underline font-medium"
                             >
                                 Sign up

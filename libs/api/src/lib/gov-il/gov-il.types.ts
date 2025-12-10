@@ -105,6 +105,7 @@ export interface VehicleFilterOptions {
 export interface VehicleSearchOptions {
     licensePlate?: string;
     filters?: VehicleFilters;
+    searchQuery?: string; // Full-text search across all fields
     limit?: number;
     offset?: number;
 }

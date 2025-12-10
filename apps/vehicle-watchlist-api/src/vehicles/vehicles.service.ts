@@ -25,37 +25,63 @@ export class VehiclesService {
     }
 
     /**
-     * Search vehicles with filters
+     * Search vehicles with filters using full-text search
+     * The gov.il API's `q` parameter searches across all text fields
      */
     async searchWithFilters(
         filters: VehicleFilterOptions,
         options: { limit?: number; offset?: number } = {}
     ): Promise<VehicleSearchResult> {
-        // Map DTO fields to API field names
-        const apiFilters: Record<string, string | number> = {};
+        // Build search query from all text filters
+        const searchTerms: string[] = [];
 
-        if (filters.manufacturer) apiFilters.tozeret_nm = filters.manufacturer;
-        if (filters.model) apiFilters.kinuy_mishari = filters.model;
-        if (filters.yearFrom) apiFilters.shnat_yitzur = filters.yearFrom; // For exact year or range start
-        if (filters.color) apiFilters.tzeva_rechev = filters.color;
-        if (filters.fuelType) apiFilters.sug_delek_nm = filters.fuelType;
-        if (filters.ownership) apiFilters.baalut = filters.ownership;
+        if (filters.manufacturer) searchTerms.push(filters.manufacturer);
+        if (filters.model) searchTerms.push(filters.model);
+        if (filters.color) searchTerms.push(filters.color);
+        if (filters.fuelType) searchTerms.push(filters.fuelType);
+        if (filters.ownership) searchTerms.push(filters.ownership);
 
-        this.logger.log(`Searching vehicles with filters: ${JSON.stringify(apiFilters)}`);
+        // Combine all search terms into one query string
+        const searchQuery = searchTerms.join(' ');
 
-        const result = await this.govIlApiService.searchWithFilters(apiFilters, options);
+        this.logger.log(`Searching vehicles with query: "${searchQuery}", yearFrom: ${filters.yearFrom}, yearTo: ${filters.yearTo}`);
 
-        // If yearTo is specified, we need to filter results client-side for year range
-        if (filters.yearTo && result.success) {
+        let result: VehicleSearchResult;
+
+        if (searchQuery) {
+            // Use full-text search for text filters
+            result = await this.govIlApiService.searchWithQuery(searchQuery, {
+                limit: options.limit || 50, // Get more results for client-side year filtering
+                offset: options.offset,
+            });
+        } else if (filters.yearFrom) {
+            // If only year filter, use exact filter on year
+            result = await this.govIlApiService.searchWithFilters(
+                { shnat_yitzur: filters.yearFrom },
+                options
+            );
+        } else {
+            // No filters provided
+            return {
+                success: false,
+                vehicles: [],
+                total: 0,
+                error: 'At least one search filter is required',
+            };
+        }
+
+        // Apply year range filter client-side (gov.il API doesn't support range queries)
+        if (result.success && (filters.yearFrom || filters.yearTo)) {
             const yearFrom = filters.yearFrom || 0;
-            const yearTo = filters.yearTo;
+            const yearTo = filters.yearTo || 9999;
             result.vehicles = result.vehicles.filter(
                 v => v.year >= yearFrom && v.year <= yearTo
             );
+            result.total = result.vehicles.length;
         }
 
         if (result.success) {
-            this.logger.log(`Found ${result.vehicles.length} vehicle(s) (total: ${result.total})`);
+            this.logger.log(`Found ${result.vehicles.length} vehicle(s)`);
         } else {
             this.logger.warn(`Search failed: ${result.error}`);
         }

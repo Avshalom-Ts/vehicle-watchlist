@@ -28,7 +28,7 @@ export class WatchlistController {
     @Post()
     @HttpCode(HttpStatus.CREATED)
     async addToWatchlist(@Request() req: any, @Body() dto: AddToWatchlistDto) {
-        const userId = req.user.sub;
+        const userId = req.user.id;
         const item = await this.watchlistService.addToWatchlist(userId, dto);
 
         return {
@@ -50,7 +50,7 @@ export class WatchlistController {
         @Query('limit') limit?: string,
         @Query('offset') offset?: string
     ) {
-        const userId = req.user.sub;
+        const userId = req.user.id;
         const result = await this.watchlistService.getWatchlist(userId, {
             starredOnly: starredOnly === 'true',
             limit: limit ? parseInt(limit, 10) : undefined,
@@ -71,7 +71,7 @@ export class WatchlistController {
     @Get(':licensePlate')
     @HttpCode(HttpStatus.OK)
     async getWatchlistItem(@Request() req: any, @Param('licensePlate') licensePlate: string) {
-        const userId = req.user.sub;
+        const userId = req.user.id;
         const item = await this.watchlistService.getWatchlistItem(userId, licensePlate);
 
         return {
@@ -92,7 +92,7 @@ export class WatchlistController {
         @Param('licensePlate') licensePlate: string,
         @Body() dto: UpdateWatchlistDto
     ) {
-        const userId = req.user.sub;
+        const userId = req.user.id;
         const item = await this.watchlistService.updateWatchlistItem(userId, licensePlate, dto);
 
         return {
@@ -109,7 +109,7 @@ export class WatchlistController {
     @Patch(':licensePlate/star')
     @HttpCode(HttpStatus.OK)
     async toggleStar(@Request() req: any, @Param('licensePlate') licensePlate: string) {
-        const userId = req.user.sub;
+        const userId = req.user.id;
         const item = await this.watchlistService.toggleStar(userId, licensePlate);
 
         return {
@@ -126,7 +126,7 @@ export class WatchlistController {
     @Delete(':licensePlate')
     @HttpCode(HttpStatus.OK)
     async removeFromWatchlist(@Request() req: any, @Param('licensePlate') licensePlate: string) {
-        const userId = req.user.sub;
+        const userId = req.user.id;
         await this.watchlistService.removeFromWatchlist(userId, licensePlate);
 
         return {

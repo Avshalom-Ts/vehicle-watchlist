@@ -1,8 +1,11 @@
 'use client';
 
+import React from 'react';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { AuthService } from '@/lib/auth-service';
+import { WatchlistService } from '@/lib/watchlist-service';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Car, User } from 'lucide-react';
@@ -11,6 +14,7 @@ export default function DashboardPage() {
     const router = useRouter();
     const [user, setUser] = useState<{ id: string; email: string; name: string } | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [watchlistCount, setWatchlistCount] = useState(0);
 
     useEffect(() => {
         // Check authentication
@@ -21,6 +25,12 @@ export default function DashboardPage() {
 
         const userData = AuthService.getUser();
         setUser(userData);
+
+        // Fetch watchlist count
+        WatchlistService.getWatchlistCount()
+            .then(count => setWatchlistCount(count))
+            .catch(() => setWatchlistCount(0));
+
         setIsLoading(false);
     }, [router]);
 
@@ -43,79 +53,72 @@ export default function DashboardPage() {
                     </div>
                 </div>
 
-                {/* User Info Card */}
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                            <User className="h-5 w-5" />
-                            Profile Information
-                        </CardTitle>
-                        <CardDescription>Your account details</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                        <div>
-                            <p className="text-sm font-medium text-muted-foreground">Name</p>
-                            <p className="text-lg">{user?.name}</p>
-                        </div>
-                        <div>
-                            <p className="text-sm font-medium text-muted-foreground">Email</p>
-                            <p className="text-lg">{user?.email}</p>
-                        </div>
-                    </CardContent>
-                </Card>
-
-                {/* Watchlist Section */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <Card className="hover:shadow-lg transition-shadow">
+                <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                    {/* User Info Card */}
+                    <Card className='col-span-2'>
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2">
-                                <Car className="h-5 w-5" />
-                                My Watchlist
+                                Profile Information
                             </CardTitle>
-                            <CardDescription>Vehicles you're tracking</CardDescription>
+                            <CardDescription>Your account details</CardDescription>
                         </CardHeader>
-                        <CardContent>
-                            <p className="text-3xl font-bold">0</p>
-                            <p className="text-sm text-muted-foreground mt-1">No vehicles yet</p>
+                        <CardContent className="flex gap-8">
+                            <div>
+                                <p className="text-sm font-medium text-muted-foreground">Name</p>
+                                <p className="text-lg">{user?.name}</p>
+                            </div>
+                            <div>
+                                <p className="text-sm font-medium text-muted-foreground">Email</p>
+                                <p className="text-lg">{user?.email}</p>
+                            </div>
                         </CardContent>
                     </Card>
 
-                    <Card className="hover:shadow-lg transition-shadow">
+                    {/* Quick Actions */}
+                    <Card className='col-span-2'>
                         <CardHeader>
-                            <CardTitle>Recent Activity</CardTitle>
-                            <CardDescription>Your latest actions</CardDescription>
+                            <CardTitle>Quick Actions</CardTitle>
+                            <CardDescription>Common tasks</CardDescription>
                         </CardHeader>
-                        <CardContent>
-                            <p className="text-sm text-muted-foreground">No recent activity</p>
+                        <CardContent className="flex flex-wrap gap-3">
+                            <Button variant="outline" asChild>
+                                <Link href="/search">Search Vehicles</Link>
+                            </Button>
+                            <Button variant="outline">View Analytics</Button>
                         </CardContent>
                     </Card>
 
-                    <Card className="hover:shadow-lg transition-shadow">
-                        <CardHeader>
-                            <CardTitle>Saved Searches</CardTitle>
-                            <CardDescription>Quick access to searches</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <p className="text-sm text-muted-foreground">No saved searches</p>
-                        </CardContent>
-                    </Card>
+                    {/* Summary Cards */}
+                    <Link href="/watchlist">
+                        <Card className="hover:shadow-lg transition-shadow cursor-pointer h-full">
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2">
+                                    My Watchlist
+                                </CardTitle>
+                                <CardDescription>Vehicles you're tracking</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <p className="text-3xl font-bold">{watchlistCount}</p>
+                                <p className="text-sm text-muted-foreground mt-1">
+                                    {watchlistCount === 0 ? 'No vehicles yet' : `vehicle${watchlistCount !== 1 ? 's' : ''} tracked`}
+                                </p>
+                            </CardContent>
+                        </Card>
+                    </Link>
+
                 </div>
 
-                {/* Quick Actions */}
-                <Card>
+                {/* Watchlist Section TODO: Show graf about the user activities*/}
+                <Card className="hover:shadow-lg transition-shadow">
                     <CardHeader>
-                        <CardTitle>Quick Actions</CardTitle>
-                        <CardDescription>Common tasks</CardDescription>
+                        <CardTitle>Recent Activity</CardTitle>
+                        <CardDescription>Your latest actions</CardDescription>
                     </CardHeader>
-                    <CardContent className="flex flex-wrap gap-3">
-                        <Button>
-                            <Car className="h-4 w-4 mr-2" />
-                            Add Vehicle
-                        </Button>
-                        <Button variant="outline">Search Vehicles</Button>
-                        <Button variant="outline">View Analytics</Button>
+                    <CardContent>
+                        <p className="text-sm text-muted-foreground">No recent activity</p>
                     </CardContent>
                 </Card>
+
             </div>
         </main>
     );

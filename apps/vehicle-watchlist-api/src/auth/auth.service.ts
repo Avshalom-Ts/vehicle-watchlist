@@ -120,10 +120,10 @@ export class AuthService {
 
         const [access_token, refresh_token] = await Promise.all([
             this.jwtService.signAsync(payload, {
-                expiresIn: '15m',
+                expiresIn: '1d', // Access token valid for 1 day
             }),
             this.jwtService.signAsync(payload, {
-                expiresIn: '7d',
+                expiresIn: '7d', // Refresh token valid for 7 days
             }),
         ]);
 

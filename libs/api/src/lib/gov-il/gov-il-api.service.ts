@@ -44,7 +44,7 @@ export class GovIlApiService {
     }
 
     /**
-     * Search vehicles with filters
+     * Search vehicles with exact filters (for Hebrew field values)
      */
     async searchWithFilters(
         filters: Record<string, string | number>,
@@ -54,11 +54,21 @@ export class GovIlApiService {
     }
 
     /**
+     * Full-text search across all fields (supports English and Hebrew)
+     */
+    async searchWithQuery(
+        query: string,
+        options: { limit?: number; offset?: number } = {}
+    ): Promise<VehicleSearchResult> {
+        return this.searchVehicles({ searchQuery: query, ...options });
+    }
+
+    /**
      * Search vehicles with various options
      */
     async searchVehicles(options: VehicleSearchOptions): Promise<VehicleSearchResult> {
         try {
-            const { licensePlate, filters, limit = 10, offset = 0 } = options;
+            const { licensePlate, filters, searchQuery, limit = 10, offset = 0 } = options;
 
             // Build query URL
             const url = new URL(this.config.baseUrl);
@@ -66,22 +76,27 @@ export class GovIlApiService {
             url.searchParams.set('limit', limit.toString());
             url.searchParams.set('offset', offset.toString());
 
-            // Build filters object
+            // Build filters object for exact matches (like license plate)
             const queryFilters: Record<string, string | number> = {};
-            
-            // Add license plate filter if provided
+
+            // Add license plate filter if provided (exact match)
             if (licensePlate) {
                 queryFilters.mispar_rechev = licensePlate;
             }
-            
-            // Add any additional filters
+
+            // Add exact filters if provided
             if (filters) {
                 Object.assign(queryFilters, filters);
             }
-            
+
             // Add filters to URL if any exist
             if (Object.keys(queryFilters).length > 0) {
                 url.searchParams.set('filters', JSON.stringify(queryFilters));
+            }
+
+            // Add full-text search query if provided (fuzzy search across all fields)
+            if (searchQuery) {
+                url.searchParams.set('q', searchQuery);
             }
 
             this.logger.debug(`Fetching from gov.il API: ${url.toString()}`);

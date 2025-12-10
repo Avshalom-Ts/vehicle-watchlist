@@ -1,7 +1,8 @@
 'use client';
 
+import React from 'react';
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -19,6 +20,8 @@ import { AuthService } from '@/lib/auth-service';
 
 export default function RegisterPage() {
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const redirectUrl = searchParams.get('redirect') || '/dashboard';
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -92,8 +95,8 @@ export default function RegisterPage() {
 
             toast.success('Account created successfully!');
 
-            // Redirect to dashboard after successful registration
-            router.push('/dashboard');
+            // Redirect to the intended page or dashboard after successful registration
+            router.push(redirectUrl);
         } catch (error) {
             toast.error(error instanceof Error ? error.message : 'Registration failed. Please try again.');
             setIsLoading(false);

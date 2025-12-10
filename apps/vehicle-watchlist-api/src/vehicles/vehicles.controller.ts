@@ -34,34 +34,8 @@ export class VehiclesController {
     }
 
     /**
-     * Get a single vehicle by license plate
-     * GET /vehicles/:plate
-     */
-    @Get(':plate')
-    @HttpCode(HttpStatus.OK)
-    async getByPlate(@Query('plate') plate: string) {
-        if (!plate) {
-            throw new BadRequestException('License plate is required');
-        }
-
-        const vehicle = await this.vehiclesService.getByPlate(plate);
-
-        if (!vehicle) {
-            return {
-                success: false,
-                message: 'Vehicle not found',
-                data: null,
-            };
-        }
-
-        return {
-            success: true,
-            data: vehicle,
-        };
-    }
-
-    /**
-     * Search for vehicles with filters
+     * Search for vehicles with filters (must be before :plate route)
+     * GET /vehicles/filter?manufacturer=Toyota&yearFrom=2020
      */
     @Get('filter')
     @HttpCode(HttpStatus.OK)
@@ -82,6 +56,11 @@ export class VehiclesController {
                 delete filters[key as keyof typeof filters];
             }
         });
+
+        // Validate at least one filter is provided
+        if (Object.keys(filters).length === 0) {
+            throw new BadRequestException('At least one filter is required (manufacturer, model, yearFrom, yearTo, color, fuelType, or ownership)');
+        }
 
         const result = await this.vehiclesService.searchWithFilters(filters, {
             limit: query.limit,
