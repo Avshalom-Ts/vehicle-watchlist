@@ -1,8 +1,10 @@
 import { Module } from '@nestjs/common';
+import { GovIlApiModule } from './gov-il';
 
 @Module({
+  imports: [GovIlApiModule],
   controllers: [],
   providers: [],
-  exports: [],
+  exports: [GovIlApiModule],
 })
-export class ApiModule {}
+export class ApiModule { }
