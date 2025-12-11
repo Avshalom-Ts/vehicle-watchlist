@@ -71,10 +71,10 @@ services:
       - JWT_SECRET=${JWT_SECRET:-jwt-secret-key}
       - JWT_EXPIRES_IN=${JWT_EXPIRES_IN:-7d}
       - RESOURCE_ID=${RESOURCE_ID}
-      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
-      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
-      - GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID}
-      - GITHUB_CLIENT_SECRET=${GITHUB_CLIENT_SECRET}
+      # - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      # - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      # - GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID}
+      # - GITHUB_CLIENT_SECRET=${GITHUB_CLIENT_SECRET}
       - PORT=3000
     ports:
       - "3000:3000"
@@ -102,7 +102,10 @@ services:
     depends_on:
       - server
     environment:
-      - NEXT_PUBLIC_API_URL=http://server:3000/api
+      # NEXT_PUBLIC_API_URL should point to the externally accessible API URL
+      # For local development: http://localhost:3000/api
+      # For CodeSandbox: Use the external URL (e.g., https://g5kq2m-3000.csb.app/api)
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:3000/api}
     ports:
       - "4200:4200"
     networks:

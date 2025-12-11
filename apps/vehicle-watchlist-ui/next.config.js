@@ -9,9 +9,9 @@ const nextConfig = {
   // Use this to set Nx-specific options
   // See: https://nx.dev/recipes/next/next-config-setup
   nx: {},
-  // Use standalone output for Docker deployment (includes Node.js server)
-  output: 'standalone',
-  // Disable image optimization for simpler deployment
+  // Use static export for simple nginx deployment
+  output: 'export',
+  // Disable image optimization for static export
   images: {
     unoptimized: true,
   },

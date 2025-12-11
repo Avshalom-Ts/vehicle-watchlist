@@ -26,37 +26,24 @@ COPY --from=deps /app/package.json ./package.json
 # Copy source code
 COPY . .
 
-# Build the Next.js application - NX outputs to .next in the app folder
+# Build the Next.js application (static export)
+# API URL is set at build time - use ARG for flexibility
+ARG NEXT_PUBLIC_API_URL=http://localhost:3000/api
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN bun run nx build vehicle-watchlist-ui
 
-# Stage 3: Runner
-FROM node:20-alpine AS runner
-WORKDIR /app
+# Stage 3: Production nginx server
+FROM nginx:alpine AS runner
 
-ENV NODE_ENV=production
-ENV NEXT_TELEMETRY_DISABLED=1
+# Copy static export output
+COPY --from=builder /app/dist/apps/vehicle-watchlist-ui /usr/share/nginx/html
 
-# Create non-root user for security
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
-
-# Copy standalone build output
-# NX builds to dist/apps/vehicle-watchlist-ui
-COPY --from=builder /app/dist/apps/vehicle-watchlist-ui/.next/standalone ./
-COPY --from=builder /app/dist/apps/vehicle-watchlist-ui/.next/static ./dist/apps/vehicle-watchlist-ui/.next/static
-COPY --from=builder /app/dist/apps/vehicle-watchlist-ui/public ./dist/apps/vehicle-watchlist-ui/public
-
-# Set correct ownership
-RUN chown -R nextjs:nodejs /app
-
-USER nextjs
+# Copy nginx config
+COPY docker/frontent/nginx.conf /etc/nginx/nginx.conf
 
 # Expose port
 EXPOSE 4200
 
-ENV PORT=4200
-ENV HOSTNAME="0.0.0.0"
-
-# Start Next.js server
-CMD ["node", "dist/apps/vehicle-watchlist-ui/server.js"]
+# Start nginx
+CMD ["nginx", "-g", "daemon off;"]

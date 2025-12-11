@@ -1,0 +1,113 @@
+version: "3.8"
+
+# Docker Compose for Production Deployment on Proxmox VM
+# This file builds images locally from Dockerfiles
+#
+# Usage:
+#   1. Create a .env file with your secrets
+#   2. Run: docker-compose -f docker-compose.deploy.yml up -d --build
+#
+# Required environment variables in .env:
+#   - JWT_SECRET (required for security)
+
+services:
+  # MongoDB Database
+  mongodb:
+    image: mongo:7
+    container_name: vehicle-watchlist-mongodb
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USER:-admin}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:-admin123}
+      MONGO_INITDB_DATABASE: vehicle-watchlist
+    volumes:
+      - mongodb_data:/data/db
+      - mongodb_config:/data/configdb
+    networks:
+      - vehicle-watchlist-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # NestJS Backend API
+  server:
+    build:
+      context: .
+      dockerfile: docker/backend/Dockerfile
+    image: vehicle-watchlist-server:latest
+    container_name: vehicle-watchlist-server
+    restart: always
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    environment:
+      - NODE_ENV=production
+      - MONGO_URI=mongodb://${MONGO_ROOT_USER:-admin}:${MONGO_ROOT_PASSWORD:-admin123}@mongodb:27017/vehicle-watchlist?authSource=admin
+      - JWT_SECRET=${JWT_SECRET:-jwt-secret-key}
+      - JWT_EXPIRES_IN=${JWT_EXPIRES_IN:-7d}
+      - RESOURCE_ID=${RESOURCE_ID:-053cea08-09bc-40ec-8f7a-4b9525b57555}
+      - PORT=3000
+    ports:
+      - "3000:3000"
+    networks:
+      - vehicle-watchlist-network
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "--quiet",
+          "--tries=1",
+          "--spider",
+          "http://localhost:3000/health",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # Next.js Frontend Client
+  client:
+    build:
+      context: .
+      dockerfile: docker/frontent/Dockerfile
+    image: vehicle-watchlist-client:latest
+    container_name: vehicle-watchlist-client
+    restart: always
+    depends_on:
+      - server
+    environment:
+      - NODE_ENV=production
+      - PORT=4200
+      - HOSTNAME=0.0.0.0
+    ports:
+      - "4200:4200"
+    networks:
+      - vehicle-watchlist-network
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "--quiet",
+          "--tries=1",
+          "--spider",
+          "http://localhost:4200",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+networks:
+  vehicle-watchlist-network:
+    driver: bridge
+
+volumes:
+  mongodb_data:
+    driver: local
+  mongodb_config:
+    driver: local
