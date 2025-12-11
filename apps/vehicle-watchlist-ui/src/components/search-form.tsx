@@ -136,9 +136,10 @@ export function SearchForm({ initialPlate = '', onSearch, onFilterSearch, isLoad
     };
 
     return (
-        <form onSubmit={handleSearch} className="w-full space-y-1">
+        <form onSubmit={handleSearch} className="w-full space-y-3">
             {/* Search Type Selector and Input */}
-            <div className="flex flex-col sm:flex-row gap-3">
+            <div className="flex flex-col gap-3 md:flex-row">
+                {/* Search type dropdown - on top for desktop, bottom for mobile (using order) */}
                 <Select
                     value={searchType}
                     onValueChange={(value: SearchType) => {
@@ -147,7 +148,7 @@ export function SearchForm({ initialPlate = '', onSearch, onFilterSearch, isLoad
                     }}
                     disabled={isLoading}
                 >
-                    <SelectTrigger className="w-full sm:w-48 h-12">
+                    <SelectTrigger className="w-full md:w-48 h-12 order-2 md:order-1">
                         <SelectValue placeholder="Search by..." />
                     </SelectTrigger>
                     <SelectContent>
@@ -159,7 +160,8 @@ export function SearchForm({ initialPlate = '', onSearch, onFilterSearch, isLoad
                     </SelectContent>
                 </Select>
 
-                <div className="flex-1 relative">
+                {/* Input field - first on mobile */}
+                <div className="flex-1 relative order-1 md:order-2">
                     <Input
                         type="text"
                         placeholder={searchTypePlaceholders[searchType]}
@@ -168,7 +170,7 @@ export function SearchForm({ initialPlate = '', onSearch, onFilterSearch, isLoad
                             setSearchValue(e.target.value);
                             setError('');
                         }}
-                        className="h-12 text-lg pr-10"
+                        className="h-12 text-base sm:text-lg pr-10"
                         dir={searchType === 'plate' ? 'ltr' : 'auto'}
                         disabled={isLoading}
                     />
@@ -183,7 +185,8 @@ export function SearchForm({ initialPlate = '', onSearch, onFilterSearch, isLoad
                     )}
                 </div>
 
-                <Button type="submit" size="lg" className="h-12 px-8" disabled={isLoading}>
+                {/* Search button - last on both mobile and desktop */}
+                <Button type="submit" size="lg" className="h-12 w-full sm:w-auto sm:px-8 order-3" disabled={isLoading}>
                     {isLoading ? (
                         <Loader2 className="w-5 h-5 mr-2 animate-spin" />
                     ) : (
@@ -201,17 +204,27 @@ export function SearchForm({ initialPlate = '', onSearch, onFilterSearch, isLoad
             {searchType !== 'plate' && onFilterSearch && (
                 <Collapsible open={showAdvanced} onOpenChange={setShowAdvanced}>
                     <CollapsibleTrigger asChild>
-                        <Button variant="ghost" size="sm" type="button" className="text-muted-foreground">
-                            {showAdvanced ? (
-                                <ChevronUp className="w-4 h-4 mr-2" />
-                            ) : (
-                                <ChevronDown className="w-4 h-4 mr-2" />
+                        <div className='flex flex-col items-start'>
+                            <Button variant="ghost" size="sm" type="button" className="text-muted-foreground h-fit">
+                                {showAdvanced ? (
+                                    <ChevronUp className="w-4 h-4 mr-2" />
+                                ) : (
+                                    <ChevronDown className="w-4 h-4 mr-2" />
+                                )}
+                                Advanced Filters
+                            </Button>
+
+                            {/* Help text for "All Filters" mode */}
+                            {searchType === 'all' && (
+                                <p className="text-xs text-muted-foreground pl-12 pr-3">
+                                    Tip: Enter multiple search terms separated by spaces. Use year range like "2010-2020".
+                                    Example: "Toyota Corolla White 2015-2020"
+                                </p>
                             )}
-                            Advanced Filters
-                        </Button>
+                        </div>
                     </CollapsibleTrigger>
                     <CollapsibleContent className="pt-4">
-                        <div className="grid grid-cols-2 gap-4 max-w-md">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-md">
                             <div className="space-y-2">
                                 <Label htmlFor="yearFrom">Year From</Label>
                                 <Input
@@ -223,6 +236,7 @@ export function SearchForm({ initialPlate = '', onSearch, onFilterSearch, isLoad
                                     value={yearFrom}
                                     onChange={(e) => setYearFrom(e.target.value)}
                                     disabled={isLoading}
+                                    className="h-12"
                                 />
                             </div>
                             <div className="space-y-2">
@@ -236,6 +250,7 @@ export function SearchForm({ initialPlate = '', onSearch, onFilterSearch, isLoad
                                     value={yearTo}
                                     onChange={(e) => setYearTo(e.target.value)}
                                     disabled={isLoading}
+                                    className="h-12"
                                 />
                             </div>
                         </div>
@@ -243,13 +258,7 @@ export function SearchForm({ initialPlate = '', onSearch, onFilterSearch, isLoad
                 </Collapsible>
             )}
 
-            {/* Help text for "All Filters" mode */}
-            {searchType === 'all' && (
-                <p className="text-xs text-muted-foreground">
-                    Tip: Enter multiple search terms separated by spaces. Use year range like "2010-2020".
-                    Example: "Toyota Corolla White 2015-2020"
-                </p>
-            )}
+
         </form>
     );
 }

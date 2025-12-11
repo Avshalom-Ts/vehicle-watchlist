@@ -65,6 +65,22 @@ export class WatchlistController {
     }
 
     /**
+     * Get watchlist analytics
+     * GET /watchlist/analytics
+     */
+    @Get('analytics')
+    @HttpCode(HttpStatus.OK)
+    async getAnalytics(@Request() req: any) {
+        const userId = req.user.id;
+        const analytics = await this.watchlistService.getAnalytics(userId);
+
+        return {
+            success: true,
+            data: analytics,
+        };
+    }
+
+    /**
      * Get a specific watchlist item
      * GET /watchlist/:licensePlate
      */

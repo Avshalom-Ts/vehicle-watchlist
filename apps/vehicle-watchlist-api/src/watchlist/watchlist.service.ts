@@ -146,4 +146,125 @@ export class WatchlistService {
 
         return count > 0;
     }
+
+    /**
+     * Get watchlist analytics using MongoDB aggregation
+     */
+    async getAnalytics(userId: string): Promise<{
+        totalVehicles: number;
+        starredCount: number;
+        byManufacturer: Array<{ _id: string; count: number }>;
+        byYear: Array<{ _id: number; count: number }>;
+        byFuelType: Array<{ _id: string; count: number }>;
+        byColor: Array<{ _id: string; count: number }>;
+        recentlyAdded: Array<{ licensePlate: string; manufacturer: string; model: string; createdAt: Date }>;
+        averageYear: number;
+        oldestVehicle: { year: number; manufacturer: string; model: string } | null;
+        newestVehicle: { year: number; manufacturer: string; model: string } | null;
+    }> {
+        const userObjectId = new Types.ObjectId(userId);
+
+        // Run all aggregations in parallel for performance
+        const [stats, byManufacturer, byYear, byFuelType, byColor, recentlyAdded, yearStats] = await Promise.all([
+            // Basic stats (total, starred)
+            this.watchlistModel.aggregate([
+                { $match: { userId: userObjectId } },
+                {
+                    $group: {
+                        _id: null,
+                        totalVehicles: { $sum: 1 },
+                        starredCount: { $sum: { $cond: ['$isStarred', 1, 0] } },
+                    },
+                },
+            ]).exec(),
+
+            // Group by manufacturer
+            this.watchlistModel.aggregate([
+                { $match: { userId: userObjectId } },
+                { $group: { _id: '$manufacturer', count: { $sum: 1 } } },
+                { $sort: { count: -1 } },
+                { $limit: 10 },
+            ]).exec(),
+
+            // Group by year
+            this.watchlistModel.aggregate([
+                { $match: { userId: userObjectId } },
+                { $group: { _id: '$year', count: { $sum: 1 } } },
+                { $sort: { _id: -1 } },
+            ]).exec(),
+
+            // Group by fuel type
+            this.watchlistModel.aggregate([
+                { $match: { userId: userObjectId, fuelType: { $ne: null } } },
+                { $group: { _id: '$fuelType', count: { $sum: 1 } } },
+                { $sort: { count: -1 } },
+            ]).exec(),
+
+            // Group by color
+            this.watchlistModel.aggregate([
+                { $match: { userId: userObjectId, color: { $ne: null } } },
+                { $group: { _id: '$color', count: { $sum: 1 } } },
+                { $sort: { count: -1 } },
+                { $limit: 10 },
+            ]).exec(),
+
+            // Recently added (last 5)
+            this.watchlistModel.aggregate([
+                { $match: { userId: userObjectId } },
+                { $sort: { createdAt: -1 } },
+                { $limit: 5 },
+                { $project: { licensePlate: 1, manufacturer: 1, model: 1, createdAt: 1 } },
+            ]).exec(),
+
+            // Year statistics (avg, min, max)
+            this.watchlistModel.aggregate([
+                { $match: { userId: userObjectId } },
+                {
+                    $group: {
+                        _id: null,
+                        avgYear: { $avg: '$year' },
+                        minYear: { $min: '$year' },
+                        maxYear: { $max: '$year' },
+                    },
+                },
+            ]).exec(),
+        ]);
+
+        // Get oldest and newest vehicle details
+        const [oldestVehicle, newestVehicle] = await Promise.all([
+            yearStats[0]?.minYear
+                ? this.watchlistModel.findOne(
+                    { userId: userObjectId, year: yearStats[0].minYear },
+                    { year: 1, manufacturer: 1, model: 1 }
+                ).lean().exec()
+                : null,
+            yearStats[0]?.maxYear
+                ? this.watchlistModel.findOne(
+                    { userId: userObjectId, year: yearStats[0].maxYear },
+                    { year: 1, manufacturer: 1, model: 1 }
+                ).lean().exec()
+                : null,
+        ]);
+
+        return {
+            totalVehicles: stats[0]?.totalVehicles || 0,
+            starredCount: stats[0]?.starredCount || 0,
+            byManufacturer,
+            byYear,
+            byFuelType,
+            byColor,
+            recentlyAdded,
+            averageYear: Math.round(yearStats[0]?.avgYear || 0),
+            oldestVehicle: oldestVehicle ? {
+                year: oldestVehicle.year,
+                manufacturer: oldestVehicle.manufacturer,
+                model: oldestVehicle.model,
+            } : null,
+            newestVehicle: newestVehicle ? {
+                year: newestVehicle.year,
+                manufacturer: newestVehicle.manufacturer,
+                model: newestVehicle.model,
+            } : null,
+        };
+    }
 }

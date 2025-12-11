@@ -293,14 +293,14 @@ function SearchContent() {
                 </div>
 
                 {/* Header */}
-                <div className="text-center mb-8">
-                    <div className="flex justify-center mb-4">
-                        <div className="p-3 bg-primary/10 rounded-full">
-                            <Car className="w-10 h-10 text-primary" />
+                <div className="text-center mb-6 sm:mb-8">
+                    <div className="flex justify-center mb-3 sm:mb-4">
+                        <div className="p-2 sm:p-3 bg-primary/10 rounded-full">
+                            <Car className="w-8 h-8 sm:w-10 sm:h-10 text-primary" />
                         </div>
                     </div>
-                    <h1 className="text-3xl font-bold mb-2">Vehicle Search</h1>
-                    <p className="text-muted-foreground">
+                    <h1 className="text-2xl sm:text-3xl font-bold mb-2">Vehicle Search</h1>
+                    <p className="text-sm sm:text-base text-muted-foreground px-4">
                         Search by license plate or use filters to find vehicles
                     </p>
                 </div>
@@ -317,10 +317,10 @@ function SearchContent() {
                     )}
                     <div
                         className={`
-                            bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm rounded-xl p-6 shadow-lg mb-8
+                            bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm rounded-xl p-4 sm:p-6 shadow-lg mb-8
                             transition-all duration-300 ease-in-out
                             ${isSearchSticky
-                                ? 'fixed top-0 left-0 right-0 z-40 mx-auto max-w-4xl rounded-t-none shadow-xl border-b border-border/50'
+                                ? 'fixed top-16 left-0 right-0 z-40 mx-auto max-w-4xl rounded-t-none shadow-xl border-b border-border/50 px-4'
                                 : ''
                             }
                         `}

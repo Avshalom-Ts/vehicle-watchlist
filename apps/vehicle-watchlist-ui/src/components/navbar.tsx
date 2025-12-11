@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
-import { Car, User, LogOut } from 'lucide-react';
+import { Car, User, LogOut, Menu, X } from 'lucide-react';
 import { AuthService } from '@/lib/auth-service';
 import { toast } from 'sonner';
 
@@ -15,6 +15,7 @@ export function Navbar() {
     const pathname = usePathname();
     const [user, setUser] = useState<{ id: string; email: string; name: string } | null>(null);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
     useEffect(() => {
         // Check authentication status
@@ -35,49 +36,172 @@ export function Navbar() {
         return () => window.removeEventListener('storage', checkAuth);
     }, [pathname]); // Re-check auth when route changes
 
+    // Close mobile menu when route changes
+    useEffect(() => {
+        setIsMobileMenuOpen(false);
+    }, [pathname]);
+
     const handleLogout = () => {
         AuthService.logout();
         setIsAuthenticated(false);
         setUser(null);
+        setIsMobileMenuOpen(false);
         toast.success('Logged out successfully');
         router.push('/login');
     };
 
-    return (
-        <nav className="border-b bg-background">
-            <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-                <Link href="/" className="flex items-center gap-2 font-semibold text-xl">
-                    <Car className="h-6 w-6" />
-                    Vehicle Watchlist
-                </Link>
+    const closeMobileMenu = () => {
+        setIsMobileMenuOpen(false);
+    };
 
-                <div className="flex items-center gap-3">
-                    <ThemeToggle />
-                    {isAuthenticated && user ? (
-                        <>
-                            <Button variant="ghost" asChild>
-                                <Link href="/dashboard">
-                                    <User className="h-4 w-4 mr-2" />
-                                    {user.name}
-                                </Link>
-                            </Button>
-                            <Button variant="outline" onClick={handleLogout}>
-                                <LogOut className="h-4 w-4 mr-2" />
-                                Logout
-                            </Button>
-                        </>
-                    ) : (
-                        <>
-                            <Button variant="ghost" asChild>
-                                <Link href="/login">Login</Link>
-                            </Button>
-                            <Button asChild>
-                                <Link href="/register">Register</Link>
-                            </Button>
-                        </>
-                    )}
+    return (
+        <>
+            <nav className="fixed top-0 left-0 right-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+                <div className="container mx-auto px-4 h-16 flex items-center justify-between">
+                    {/* Logo */}
+                    <Link href="/" className="flex items-center gap-2 font-semibold text-xl">
+                        <Car className="h-6 w-6" />
+                        <span className="sm:inline">Vehicle Watchlist</span>
+                    </Link>
+
+                    {/* Desktop Navigation */}
+                    <div className="hidden md:flex items-center gap-3">
+                        <ThemeToggle />
+                        {isAuthenticated && user ? (
+                            <>
+                                <Button variant="ghost" asChild>
+                                    <Link href="/dashboard">
+                                        <User className="h-4 w-4 mr-2" />
+                                        {user.name}
+                                    </Link>
+                                </Button>
+                                <Button variant="outline" onClick={handleLogout}>
+                                    <LogOut className="h-4 w-4 mr-2" />
+                                    Logout
+                                </Button>
+                            </>
+                        ) : (
+                            <>
+                                <Button variant="ghost" asChild>
+                                    <Link href="/login">Login</Link>
+                                </Button>
+                                <Button asChild>
+                                    <Link href="/register">Register</Link>
+                                </Button>
+                            </>
+                        )}
+                    </div>
+
+                    {/* Mobile Menu Button */}
+                    <div className="flex md:hidden items-center gap-2">
+                        <ThemeToggle />
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                            aria-label="Toggle menu"
+                        >
+                            {isMobileMenuOpen ? (
+                                <X className="h-6 w-6" />
+                            ) : (
+                                <Menu className="h-6 w-6" />
+                            )}
+                        </Button>
+                    </div>
                 </div>
-            </div>
-        </nav>
+
+                {/* Mobile Menu Dropdown */}
+                {isMobileMenuOpen && (
+                    <div className="md:hidden border-t bg-background">
+                        <div className="container mx-auto px-4 py-4 space-y-3">
+                            {isAuthenticated && user ? (
+                                <>
+                                    <div className="flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground">
+                                        <User className="h-4 w-4" />
+                                        Signed in as <span className="font-medium text-foreground">{user.name}</span>
+                                    </div>
+                                    <div className="border-t pt-3 space-y-1">
+                                        <Button
+                                            variant="ghost"
+                                            className="w-full justify-start"
+                                            asChild
+                                            onClick={closeMobileMenu}
+                                        >
+                                            <Link href="/dashboard">
+                                                <User className="h-4 w-4 mr-2" />
+                                                Dashboard
+                                            </Link>
+                                        </Button>
+                                        <Button
+                                            variant="ghost"
+                                            className="w-full justify-start"
+                                            asChild
+                                            onClick={closeMobileMenu}
+                                        >
+                                            <Link href="/search">
+                                                <Car className="h-4 w-4 mr-2" />
+                                                Search Vehicles
+                                            </Link>
+                                        </Button>
+                                        <Button
+                                            variant="ghost"
+                                            className="w-full justify-start"
+                                            asChild
+                                            onClick={closeMobileMenu}
+                                        >
+                                            <Link href="/watchlist">
+                                                <Car className="h-4 w-4 mr-2" />
+                                                My Watchlist
+                                            </Link>
+                                        </Button>
+                                        <Button
+                                            variant="ghost"
+                                            className="w-full justify-start"
+                                            asChild
+                                            onClick={closeMobileMenu}
+                                        >
+                                            <Link href="/analytics">
+                                                <Car className="h-4 w-4 mr-2" />
+                                                Analytics
+                                            </Link>
+                                        </Button>
+                                    </div>
+                                    <div className="border-t pt-3">
+                                        <Button
+                                            variant="outline"
+                                            className="w-full justify-start text-destructive hover:text-destructive"
+                                            onClick={handleLogout}
+                                        >
+                                            <LogOut className="h-4 w-4 mr-2" />
+                                            Logout
+                                        </Button>
+                                    </div>
+                                </>
+                            ) : (
+                                <div className="space-y-2">
+                                    <Button
+                                        variant="ghost"
+                                        className="w-full justify-start"
+                                        asChild
+                                        onClick={closeMobileMenu}
+                                    >
+                                        <Link href="/login">Login</Link>
+                                    </Button>
+                                    <Button
+                                        className="w-full"
+                                        asChild
+                                        onClick={closeMobileMenu}
+                                    >
+                                        <Link href="/register">Register</Link>
+                                    </Button>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
+            </nav>
+            {/* Spacer to prevent content from going under fixed navbar */}
+            <div className="h-16" />
+        </>
     );
 }

@@ -54,5 +54,5 @@ out
 /data
 
 # Tasks
-BRANCH_TASKS.md
+docs/
 .github/copilot-instructions.md

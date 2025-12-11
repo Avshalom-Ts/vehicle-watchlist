@@ -6,8 +6,17 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { AuthService } from '@/lib/auth-service';
 import { WatchlistService } from '@/lib/watchlist-service';
+import { AnalyticsService } from '@/lib/analytics-service';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Car, Clock, TrendingUp } from 'lucide-react';
+
+interface RecentActivity {
+    licensePlate: string;
+    manufacturer: string;
+    model: string;
+    createdAt: string;
+}
 
 export default function DashboardPage() {
     const router = useRouter();
@@ -15,6 +24,7 @@ export default function DashboardPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [watchlistCount, setWatchlistCount] = useState(0);
     const [starredCount, setStarredCount] = useState(0);
+    const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
 
     useEffect(() => {
         // Check authentication
@@ -29,13 +39,18 @@ export default function DashboardPage() {
         // Fetch watchlist and starred counts
         Promise.all([
             WatchlistService.getWatchlistCount(),
-            WatchlistService.getStarredCount()
-        ]).then(([total, starred]) => {
+            WatchlistService.getStarredCount(),
+            AnalyticsService.getAnalytics()
+        ]).then(([total, starred, analytics]) => {
             setWatchlistCount(total);
             setStarredCount(starred);
+            if (analytics.success && analytics.data) {
+                setRecentActivity(analytics.data.recentlyAdded);
+            }
         }).catch(() => {
             setWatchlistCount(0);
             setStarredCount(0);
+            setRecentActivity([]);
         });
 
         setIsLoading(false);
@@ -91,7 +106,9 @@ export default function DashboardPage() {
                             <Button variant="outline" asChild>
                                 <Link href="/search">Search Vehicles</Link>
                             </Button>
-                            <Button variant="outline">View Analytics</Button>
+                            <Button variant="outline" asChild>
+                                <Link href="/analytics">View Analytics</Link>
+                            </Button>
                         </CardContent>
                     </Card>
 
@@ -129,14 +146,68 @@ export default function DashboardPage() {
 
                 </div>
 
-                {/* Watchlist Section TODO: Show graf about the user activities*/}
+                {/* Recent Activity Section */}
                 <Card className="hover:shadow-lg transition-shadow">
-                    <CardHeader>
-                        <CardTitle>Recent Activity</CardTitle>
-                        <CardDescription>Your latest actions</CardDescription>
+                    <CardHeader className="flex flex-row items-center justify-between">
+                        <div>
+                            <CardTitle className="flex items-center gap-2">
+                                <Clock className="w-5 h-5" />
+                                Recent Activity
+                            </CardTitle>
+                            <CardDescription>Your latest watchlist additions</CardDescription>
+                        </div>
+                        {recentActivity.length > 0 && (
+                            <Button variant="ghost" size="sm" asChild>
+                                <Link href="/analytics">
+                                    <TrendingUp className="w-4 h-4 mr-2" />
+                                    View All Analytics
+                                </Link>
+                            </Button>
+                        )}
                     </CardHeader>
                     <CardContent>
-                        <p className="text-sm text-muted-foreground">No recent activity</p>
+                        {recentActivity.length === 0 ? (
+                            <div className="text-center py-6">
+                                <Car className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
+                                <p className="text-sm text-muted-foreground mb-3">No recent activity</p>
+                                <Button variant="outline" size="sm" asChild>
+                                    <Link href="/search">Search Vehicles</Link>
+                                </Button>
+                            </div>
+                        ) : (
+                            <div className="space-y-3">
+                                {recentActivity.map((activity) => (
+                                    <div
+                                        key={activity.licensePlate}
+                                        className="flex items-center justify-between p-3 bg-muted/50 rounded-lg hover:bg-muted transition-colors"
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <div className="p-2 bg-primary/10 rounded-lg">
+                                                <Car className="w-4 h-4 text-primary" />
+                                            </div>
+                                            <div>
+                                                <p className="font-medium">
+                                                    {activity.manufacturer} {activity.model}
+                                                </p>
+                                                <p className="text-sm text-muted-foreground">
+                                                    Added to watchlist
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div className="text-right">
+                                            <div className="inline-flex items-center px-2 py-1 rounded bg-yellow-200 dark:bg-yellow-900">
+                                                <span className="font-mono text-sm font-bold" dir="ltr">
+                                                    {activity.licensePlate}
+                                                </span>
+                                            </div>
+                                            <p className="text-xs text-muted-foreground mt-1">
+                                                {new Date(activity.createdAt).toLocaleDateString('he-IL')}
+                                            </p>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                     </CardContent>
                 </Card>
 

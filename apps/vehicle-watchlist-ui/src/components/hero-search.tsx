@@ -32,7 +32,7 @@ export function HeroSearch({ className }: HeroSearchProps) {
 
     return (
         <form onSubmit={handleSearch} className={className}>
-            <div className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
+            <div className="flex flex-col sm:flex-row gap-3 mx-auto">
                 <div className="flex-1">
                     <Input
                         type="text"
