@@ -119,4 +119,16 @@ export class WatchlistService {
             return 0;
         }
     }
+
+    /**
+     * Get starred count (convenience method)
+     */
+    static async getStarredCount(): Promise<number> {
+        try {
+            const result = await this.getWatchlist({ starredOnly: true, limit: 1 });
+            return result.total;
+        } catch {
+            return 0;
+        }
+    }
 }

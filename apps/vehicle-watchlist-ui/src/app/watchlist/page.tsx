@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { WatchlistService, WatchlistItem } from '@/lib/watchlist-service';
 import { AuthService } from '@/lib/auth-service';
 import { toast } from 'sonner';
-import { ArrowLeft, Car, Star, Trash2, Calendar, Fuel, Palette, User, SearchX } from 'lucide-react';
+import { ArrowLeft, Car, Star, Trash2, Calendar, Fuel, Palette, User, SearchX, ArrowRight } from 'lucide-react';
 
 export default function WatchlistPage() {
     const router = useRouter();
@@ -78,11 +78,17 @@ export default function WatchlistPage() {
         <main className="flex-1 bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-slate-900 dark:to-slate-800">
             <div className="container px-4 py-8 max-w-4xl mx-auto">
                 {/* Back Button */}
-                <div className="mb-6">
+                <div className="mb-6 flex justify-between items-center">
                     <Button variant="ghost" size="sm" asChild>
                         <Link href="/dashboard">
                             <ArrowLeft className="w-4 h-4 mr-2" />
                             Back to Dashboard
+                        </Link>
+                    </Button>
+                    <Button variant="ghost" size="sm" asChild>
+                        <Link href="/search">
+                            Search Vehicles
+                            <ArrowRight className="w-4 h-4 mr-2" />
                         </Link>
                     </Button>
                 </div>

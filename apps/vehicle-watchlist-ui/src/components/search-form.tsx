@@ -136,7 +136,7 @@ export function SearchForm({ initialPlate = '', onSearch, onFilterSearch, isLoad
     };
 
     return (
-        <form onSubmit={handleSearch} className="w-full space-y-4">
+        <form onSubmit={handleSearch} className="w-full space-y-1">
             {/* Search Type Selector and Input */}
             <div className="flex flex-col sm:flex-row gap-3">
                 <Select

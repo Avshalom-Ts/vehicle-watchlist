@@ -2,10 +2,13 @@ import { Injectable, Logger, HttpException, HttpStatus, Optional, Inject } from 
 import {
     GovIlApiResponse,
     GovIlVehicleRecord,
+    GovIlExtendedVehicleRecord,
     Vehicle,
     VehicleFilters,
     VehicleSearchOptions,
     VehicleSearchResult,
+    ExtendedVehicleDetails,
+    ExtendedVehicleSearchResult,
     GovIlApiConfig,
     DEFAULT_GOV_IL_CONFIG,
     GOV_IL_CONFIG_TOKEN,
@@ -81,7 +84,7 @@ export class GovIlApiService {
 
             // Add license plate filter if provided (exact match)
             if (licensePlate) {
-                queryFilters.mispar_rechev = licensePlate;
+                queryFilters['mispar_rechev'] = licensePlate;
             }
 
             // Add exact filters if provided
@@ -180,10 +183,14 @@ export class GovIlApiService {
             id: record._id,
             licensePlate: record.mispar_rechev?.toString() || '',
             manufacturer: record.tozeret_nm || '',
+            manufacturerCode: record.tozeret_cd || 0,
             model: record.degem_nm || '',
+            modelCode: record.degem_cd || 0,
+            modelType: record.sug_degem || '',
             commercialName: record.kinuy_mishari || '',
             year: record.shnat_yitzur || 0,
             color: record.tzeva_rechev || '',
+            colorCode: record.tzeva_cd || 0,
             fuelType: record.sug_delek_nm || '',
             ownership: record.baalut || '',
             lastTestDate: record.mivchan_acharon_dt || null,
@@ -195,6 +202,7 @@ export class GovIlApiService {
             trimLevel: record.ramat_gimur || '',
             pollutionGroup: record.kvutzat_zihum,
             safetyLevel: record.ramat_eivzur_betihuty,
+            registrationInstruction: record.horaat_rishum,
             firstOnRoad: record.moed_aliya_lakvish || null,
         };
     }
@@ -211,6 +219,108 @@ export class GovIlApiService {
      */
     private isValidLicensePlate(plate: string): boolean {
         return /^\d{7,8}$/.test(plate);
+    }
+
+    /**
+     * Fetch extended vehicle details (tire codes, model codes, etc.)
+     */
+    async getExtendedDetails(licensePlate: string): Promise<ExtendedVehicleSearchResult> {
+        const cleanedPlate = this.cleanLicensePlate(licensePlate);
+        if (!this.isValidLicensePlate(cleanedPlate)) {
+            return {
+                success: false,
+                details: null,
+                error: 'Invalid license plate format. Must be 7-8 digits.',
+            };
+        }
+
+        try {
+            const url = new URL(this.config.baseUrl);
+            url.searchParams.set('resource_id', this.config.extendedResourceId);
+            url.searchParams.set('limit', '1');
+            // Use q parameter for search - works better than filters for this API
+            url.searchParams.set('q', cleanedPlate);
+
+            this.logger.debug(`Fetching extended details from gov.il API: ${url.toString()}`);
+
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), this.config.timeout);
+
+            try {
+                const response = await fetch(url.toString(), {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                    },
+                    signal: controller.signal,
+                });
+
+                clearTimeout(timeoutId);
+
+                if (!response.ok) {
+                    throw new HttpException(
+                        `Gov.il API returned status ${response.status}`,
+                        HttpStatus.BAD_GATEWAY
+                    );
+                }
+
+                const data = await response.json();
+
+                if (!data.success || !data.result) {
+                    const errorMessage = data.error?.message || 'Unknown API error';
+                    this.logger.error(`Gov.il API error: ${errorMessage}`);
+                    return {
+                        success: false,
+                        details: null,
+                        error: errorMessage,
+                    };
+                }
+
+                if (data.result.records.length === 0) {
+                    return {
+                        success: true,
+                        details: null,
+                    };
+                }
+
+                const record: GovIlExtendedVehicleRecord = data.result.records[0];
+                const details: ExtendedVehicleDetails = {
+                    id: record._id,
+                    licensePlate: record.mispar_rechev?.toString() || '',
+                    manufacturerCode: record.tozeret_cd,
+                    modelCode: record.degem_cd,
+                    modelType: record.sug_degem || '',
+                    frontTireLoadCode: record.kod_omes_tzmig_kidmi,
+                    rearTireLoadCode: record.kod_omes_tzmig_ahori,
+                    frontTireSpeedCode: record.kod_mehirut_tzmig_kidmi,
+                    rearTireSpeedCode: record.kod_mehirut_tzmig_ahori,
+                    towingInfo: record.grira_nm,
+                };
+
+                return {
+                    success: true,
+                    details,
+                };
+            } finally {
+                clearTimeout(timeoutId);
+            }
+        } catch (error) {
+            if (error instanceof Error && error.name === 'AbortError') {
+                this.logger.error('Gov.il API request timed out');
+                return {
+                    success: false,
+                    details: null,
+                    error: 'Request timed out. Please try again.',
+                };
+            }
+
+            this.logger.error(`Gov.il API request failed: ${error}`);
+            return {
+                success: false,
+                details: null,
+                error: error instanceof Error ? error.message : 'Failed to fetch vehicle data',
+            };
+        }
     }
 
     /**

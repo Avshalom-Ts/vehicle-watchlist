@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { GovIlApiService, Vehicle, VehicleSearchResult, VehicleFilterOptions } from '@vehicle-watchlist/api';
+import { GovIlApiService, Vehicle, VehicleSearchResult, VehicleFilterOptions, ExtendedVehicleSearchResult } from '@vehicle-watchlist/api';
 
 @Injectable()
 export class VehiclesService {
@@ -9,6 +9,7 @@ export class VehiclesService {
 
     /**
      * Search for a vehicle by license plate number
+     * Returns single exact match
      */
     async searchByPlate(plate: string): Promise<VehicleSearchResult> {
         this.logger.log(`Searching for vehicle with plate: ${plate}`);
@@ -16,7 +17,7 @@ export class VehiclesService {
         const result = await this.govIlApiService.searchByLicensePlate(plate);
 
         if (result.success) {
-            this.logger.log(`Found ${result.vehicles.length} vehicle(s)`);
+            this.logger.log(`Found ${result.vehicles.length} vehicle(s) (total: ${result.total})`);
         } else {
             this.logger.warn(`Search failed: ${result.error}`);
         }
@@ -101,5 +102,24 @@ export class VehiclesService {
         }
 
         return null;
+    }
+
+    /**
+     * Get extended vehicle details (tire codes, model codes, etc.)
+     */
+    async getExtendedDetails(plate: string): Promise<ExtendedVehicleSearchResult> {
+        this.logger.log(`Fetching extended details for vehicle: ${plate}`);
+
+        const result = await this.govIlApiService.getExtendedDetails(plate);
+
+        if (result.success && result.details) {
+            this.logger.log(`Found extended details for vehicle: ${plate}`);
+        } else if (result.success) {
+            this.logger.log(`No extended details found for vehicle: ${plate}`);
+        } else {
+            this.logger.warn(`Failed to fetch extended details: ${result.error}`);
+        }
+
+        return result;
     }
 }

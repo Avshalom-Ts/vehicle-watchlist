@@ -1,11 +1,15 @@
 import { z } from 'zod';
 
+// Pagination constants
+export const DEFAULT_PAGE_SIZE = 25;
+export const MAX_PAGE_SIZE = 100;
+
 // License plate schema - Israeli format (7-8 digits, dashes allowed)
 export const licensePlateSchema = z
     .string()
     .regex(/^[\d-]{7,10}$/, 'License plate must be 7-8 digits (dashes allowed)');
 
-// Search by license plate schema
+// Search by license plate schema (single exact match - no pagination)
 export const searchVehicleSchema = z.object({
     plate: licensePlateSchema,
 });
@@ -19,8 +23,8 @@ export const filterVehiclesSchema = z.object({
     color: z.string().optional(),
     fuelType: z.string().optional(),
     ownership: z.string().optional(),
-    limit: z.coerce.number().int().min(1).max(100).default(20),
-    offset: z.coerce.number().int().min(0).default(0),
+    page: z.coerce.number().int().min(1).default(1),
+    limit: z.coerce.number().int().min(1).max(MAX_PAGE_SIZE).default(DEFAULT_PAGE_SIZE),
 });
 
 // Vehicle response schema (from gov.il API)

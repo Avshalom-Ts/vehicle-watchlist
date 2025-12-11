@@ -61,10 +61,14 @@ export interface Vehicle {
     id: number;
     licensePlate: string;
     manufacturer: string;
+    manufacturerCode: number; // tozeret_cd
     model: string;
+    modelCode: number; // degem_cd
+    modelType: string; // sug_degem (P = Private, etc.)
     commercialName: string;
     year: number;
     color: string;
+    colorCode: number; // tzeva_cd
     fuelType: string;
     ownership: string;
     lastTestDate: string | null;
@@ -76,6 +80,7 @@ export interface Vehicle {
     trimLevel: string;
     pollutionGroup: number | null;
     safetyLevel: number | null;
+    registrationInstruction: number | null; // horaat_rishum
     firstOnRoad: string | null;
 }
 
@@ -125,11 +130,48 @@ export const GOV_IL_CONFIG_TOKEN = 'GOV_IL_CONFIG';
 export interface GovIlApiConfig {
     baseUrl: string;
     resourceId: string;
+    extendedResourceId: string; // Extended vehicle details (tires, model codes, etc.)
     timeout: number;
 }
 
 export const DEFAULT_GOV_IL_CONFIG: GovIlApiConfig = {
     baseUrl: 'https://data.gov.il/api/3/action/datastore_search',
     resourceId: '053cea08-09bc-40ec-8f7a-156f0677aff3', // Private & commercial vehicles - 4M+ records, updated daily
+    extendedResourceId: '0866573c-40cd-4ca8-91d2-9dd2d7a492e5', // Extended details with tire codes, model codes, etc.
     timeout: 10000, // 10 seconds
 };
+
+// Extended vehicle record from the extended resource API
+export interface GovIlExtendedVehicleRecord {
+    _id: number;
+    mispar_rechev: number; // License plate number
+    tozeret_cd: number; // Manufacturer code
+    degem_cd: number; // Model code
+    sug_degem: string; // Model type
+    kod_omes_tzmig_kidmi: number | null; // Front tire load code
+    kod_omes_tzmig_ahori: number | null; // Rear tire load code
+    kod_mehirut_tzmig_kidmi: string | null; // Front tire speed code (letter like V, H, etc.)
+    kod_mehirut_tzmig_ahori: string | null; // Rear tire speed code (letter like V, H, etc.)
+    grira_nm: string | null; // Towing hook info
+}
+
+// Extended vehicle details for frontend
+export interface ExtendedVehicleDetails {
+    id: number;
+    licensePlate: string;
+    manufacturerCode: number;
+    modelCode: number;
+    modelType: string;
+    frontTireLoadCode: number | null;
+    rearTireLoadCode: number | null;
+    frontTireSpeedCode: string | null;
+    rearTireSpeedCode: string | null;
+    towingInfo: string | null;
+}
+
+// Extended search result
+export interface ExtendedVehicleSearchResult {
+    success: boolean;
+    details: ExtendedVehicleDetails | null;
+    error?: string;
+}

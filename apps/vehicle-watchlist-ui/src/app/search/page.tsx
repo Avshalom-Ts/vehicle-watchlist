@@ -2,22 +2,27 @@
 
 import React from 'react';
 
-import { useEffect, useState, Suspense } from 'react';
+import { useEffect, useState, Suspense, useRef, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { SearchForm } from '@/components/search-form';
 import { VehicleCard } from '@/components/vehicle-card';
-import { VehicleService, Vehicle, VehicleFilters } from '@/lib/vehicle-service';
+import { VehicleDetailsModal } from '@/components/vehicle-details-modal';
+import { Pagination, PaginationInfo } from '@/components/ui/pagination';
+import { VehicleService, Vehicle, VehicleFilters, PaginationInfo as PaginationData } from '@/lib/vehicle-service';
 import { WatchlistService } from '@/lib/watchlist-service';
 import { AuthService } from '@/lib/auth-service';
 import { toast } from 'sonner';
 import { ArrowLeft, AlertCircle, SearchX, Car } from 'lucide-react';
 
+const DEFAULT_PAGE_SIZE = 25;
+
 function SearchContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const initialPlate = searchParams.get('plate') || '';
+    const initialPage = parseInt(searchParams.get('page') || '1', 10);
     const pendingAction = searchParams.get('action') as 'save' | 'star' | null;
     const pendingPlate = searchParams.get('pendingPlate') || '';
 
@@ -29,8 +34,29 @@ function SearchContent() {
     const [watchlistPlates, setWatchlistPlates] = useState<Set<string>>(new Set());
     const [starredPlates, setStarredPlates] = useState<Set<string>>(new Set());
 
+    // Pagination state (for filter search)
+    const [currentPage, setCurrentPage] = useState(initialPage);
+    const [pagination, setPagination] = useState<PaginationData | null>(null);
+    const [totalResults, setTotalResults] = useState(0);
+    const [currentSearchPlate, setCurrentSearchPlate] = useState(initialPlate);
+    const [currentFilters, setCurrentFilters] = useState<VehicleFilters | null>(null);
+
+    // Vehicle details modal state
+    const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
+    const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+
+    // Scroll tracking for sticky search
+    const [isSearchSticky, setIsSearchSticky] = useState(false);
+    const searchFormRef = useRef<HTMLDivElement>(null);
+    const searchFormPlaceholderRef = useRef<HTMLDivElement>(null);
+
     // Store pending action to execute after search completes
     const [pendingActionData, setPendingActionData] = useState<{ action: 'save' | 'star'; plate: string } | null>(null);
+
+    const handleVehicleClick = (vehicle: Vehicle) => {
+        setSelectedVehicle(vehicle);
+        setIsDetailsModalOpen(true);
+    };
 
     useEffect(() => {
         const isAuth = AuthService.isAuthenticated();
@@ -60,6 +86,20 @@ function SearchContent() {
         }
     }, [pendingAction, pendingPlate, initialPlate, router]);
 
+    // Scroll handler for sticky search form
+    useEffect(() => {
+        const handleScroll = () => {
+            if (searchFormRef.current) {
+                const rect = searchFormRef.current.getBoundingClientRect();
+                const headerOffset = 64; // Account for navbar height
+                setIsSearchSticky(rect.top <= headerOffset);
+            }
+        };
+
+        window.addEventListener('scroll', handleScroll, { passive: true });
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, []);
+
     // Execute pending action when vehicles are loaded
     useEffect(() => {
         if (pendingActionData && vehicles.length > 0) {
@@ -75,18 +115,27 @@ function SearchContent() {
         }
     }, [vehicles, pendingActionData]);
 
+    // Track if this is the initial load
+    const isInitialLoad = useRef(true);
+
     useEffect(() => {
-        if (initialPlate) {
+        // Only run on initial load, not on URL changes from pagination
+        if (isInitialLoad.current && initialPlate) {
+            isInitialLoad.current = false;
             handleSearch(initialPlate);
         }
-    }, [initialPlate]);
+    }, []);
 
     const handleSearch = async (plate: string) => {
         setIsLoading(true);
         setError(null);
         setHasSearched(true);
+        setCurrentSearchPlate(plate);
+        setCurrentFilters(null); // Clear filter state when doing plate search
+        setPagination(null); // Plate search doesn't use pagination
+        setCurrentPage(1);
 
-        // Update URL with search param
+        // Update URL with search params
         router.push(`/search?plate=${encodeURIComponent(plate)}`, { scroll: false });
 
         const result = await VehicleService.searchByPlate(plate);
@@ -96,28 +145,46 @@ function SearchContent() {
         if (!result.success) {
             setError(result.error || 'Failed to search vehicle');
             setVehicles([]);
+            setTotalResults(0);
             return;
         }
 
         setVehicles(result.data);
+        setTotalResults(result.total);
     };
 
-    const handleFilterSearch = async (filters: VehicleFilters) => {
+    const handlePageChange = (page: number) => {
+        console.log('handlePageChange called with page:', page, 'currentFilters:', currentFilters);
+        if (currentFilters) {
+            handleFilterSearch(currentFilters, page);
+            // Scroll to top of results
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    };
+
+    const handleFilterSearch = async (filters: VehicleFilters, page: number = 1) => {
         setIsLoading(true);
         setError(null);
         setHasSearched(true);
+        setCurrentPage(page);
+        setCurrentFilters(filters);
+        setCurrentSearchPlate(''); // Clear plate search state when doing filter search
 
-        const result = await VehicleService.searchWithFilters(filters);
+        const result = await VehicleService.searchWithFilters({ ...filters, page, limit: DEFAULT_PAGE_SIZE });
 
         setIsLoading(false);
 
         if (!result.success) {
             setError(result.error || 'Failed to search vehicles');
             setVehicles([]);
+            setPagination(null);
+            setTotalResults(0);
             return;
         }
 
         setVehicles(result.data);
+        setPagination(result.pagination || null);
+        setTotalResults(result.total);
     };
 
     const handleSaveToWatchlist = async (vehicle: Vehicle) => {
@@ -239,13 +306,32 @@ function SearchContent() {
                 </div>
 
                 {/* Search Form */}
-                <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-xl p-6 shadow-lg mb-8">
-                    <SearchForm
-                        initialPlate={initialPlate}
-                        onSearch={handleSearch}
-                        onFilterSearch={handleFilterSearch}
-                        isLoading={isLoading}
-                    />
+                <div ref={searchFormRef}>
+                    {/* Placeholder to maintain layout when form becomes fixed */}
+                    {isSearchSticky && (
+                        <div
+                            ref={searchFormPlaceholderRef}
+                            className="h-[200px]" // Approximate height of search form
+                            aria-hidden="true"
+                        />
+                    )}
+                    <div
+                        className={`
+                            bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm rounded-xl p-6 shadow-lg mb-8
+                            transition-all duration-300 ease-in-out
+                            ${isSearchSticky
+                                ? 'fixed top-0 left-0 right-0 z-40 mx-auto max-w-4xl rounded-t-none shadow-xl border-b border-border/50'
+                                : ''
+                            }
+                        `}
+                    >
+                        <SearchForm
+                            initialPlate={initialPlate}
+                            onSearch={handleSearch}
+                            onFilterSearch={handleFilterSearch}
+                            isLoading={isLoading}
+                        />
+                    </div>
                 </div>
 
                 {/* Results Section */}
@@ -287,10 +373,21 @@ function SearchContent() {
                     {/* Results */}
                     {!isLoading && !error && vehicles.length > 0 && (
                         <div className="space-y-4">
-                            <div className="flex items-center justify-between">
-                                <h2 className="text-lg font-semibold">
-                                    Search Results ({vehicles.length})
-                                </h2>
+                            <div className="flex items-center justify-between flex-wrap gap-2">
+                                <div>
+                                    <h2 className="text-lg font-semibold">
+                                        Search Results
+                                    </h2>
+                                    {pagination && (
+                                        <PaginationInfo
+                                            currentPage={currentPage}
+                                            totalPages={pagination.totalPages}
+                                            totalItems={totalResults}
+                                            itemsPerPage={DEFAULT_PAGE_SIZE}
+                                            className="mt-1"
+                                        />
+                                    )}
+                                </div>
                                 {!isAuthenticated && (
                                     <p className="text-sm text-muted-foreground">
                                         <Link href="/login" className="text-primary hover:underline">
@@ -307,16 +404,35 @@ function SearchContent() {
                                         vehicle={vehicle}
                                         onSave={handleSaveToWatchlist}
                                         onStar={handleStarVehicle}
+                                        onClick={handleVehicleClick}
                                         showActions={true}
                                         isInWatchlist={watchlistPlates.has(vehicle.licensePlate)}
                                         isStarred={starredPlates.has(vehicle.licensePlate)}
                                     />
                                 ))}
                             </div>
+
+                            {/* Pagination */}
+                            {pagination && pagination.totalPages > 1 && (
+                                <div className="pt-6 border-t">
+                                    <Pagination
+                                        currentPage={currentPage}
+                                        totalPages={pagination.totalPages}
+                                        onPageChange={handlePageChange}
+                                    />
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>
             </div>
+
+            {/* Vehicle Details Modal */}
+            <VehicleDetailsModal
+                vehicle={selectedVehicle}
+                open={isDetailsModalOpen}
+                onOpenChange={setIsDetailsModalOpen}
+            />
         </main>
     );
 }

@@ -4,10 +4,14 @@ export interface Vehicle {
     id: number;
     licensePlate: string;
     manufacturer: string;
+    manufacturerCode: number;
     model: string;
+    modelCode: number;
+    modelType: string;
     commercialName: string;
     year: number;
     color: string;
+    colorCode: number;
     fuelType: string;
     ownership: string;
     lastTestDate: string | null;
@@ -19,13 +23,42 @@ export interface Vehicle {
     trimLevel: string;
     pollutionGroup: number | null;
     safetyLevel: number | null;
+    registrationInstruction: number | null;
     firstOnRoad: string | null;
+}
+
+export interface ExtendedVehicleDetails {
+    id: number;
+    licensePlate: string;
+    manufacturerCode: number;
+    modelCode: number;
+    modelType: string;
+    frontTireLoadCode: number | null;
+    rearTireLoadCode: number | null;
+    frontTireSpeedCode: string | null;
+    rearTireSpeedCode: string | null;
+    towingInfo: string | null;
+}
+
+export interface PaginationInfo {
+    page: number;
+    limit: number;
+    totalPages: number;
+    hasNextPage: boolean;
+    hasPrevPage: boolean;
 }
 
 export interface VehicleSearchResult {
     success: boolean;
     data: Vehicle[];
     total: number;
+    pagination?: PaginationInfo;
+    error?: string;
+}
+
+export interface ExtendedDetailsResult {
+    success: boolean;
+    data: ExtendedVehicleDetails | null;
     error?: string;
 }
 
@@ -37,18 +70,26 @@ export interface VehicleFilters {
     color?: string;
     fuelType?: string;
     ownership?: string;
+    page?: number;
     limit?: number;
-    offset?: number;
 }
 
 export class VehicleService {
     /**
      * Search for vehicles by license plate (public endpoint)
      */
-    static async searchByPlate(plate: string): Promise<VehicleSearchResult> {
+    static async searchByPlate(
+        plate: string,
+        options: { page?: number; limit?: number } = {}
+    ): Promise<VehicleSearchResult> {
         try {
+            const params = new URLSearchParams();
+            params.set('plate', plate);
+            if (options.page) params.set('page', options.page.toString());
+            if (options.limit) params.set('limit', options.limit.toString());
+
             const response = await fetch(
-                `${API_URL}/vehicles/search?plate=${encodeURIComponent(plate)}`,
+                `${API_URL}/vehicles/search?${params.toString()}`,
                 {
                     method: 'GET',
                     headers: {
@@ -72,6 +113,7 @@ export class VehicleService {
                 success: true,
                 data: data.data || [],
                 total: data.total || 0,
+                pagination: data.pagination,
             };
         } catch (error) {
             return {
@@ -97,8 +139,8 @@ export class VehicleService {
             if (filters.color) params.set('color', filters.color);
             if (filters.fuelType) params.set('fuelType', filters.fuelType);
             if (filters.ownership) params.set('ownership', filters.ownership);
+            if (filters.page) params.set('page', filters.page.toString());
             if (filters.limit) params.set('limit', filters.limit.toString());
-            if (filters.offset) params.set('offset', filters.offset.toString());
 
             const response = await fetch(
                 `${API_URL}/vehicles/filter?${params.toString()}`,
@@ -125,12 +167,51 @@ export class VehicleService {
                 success: true,
                 data: data.data || [],
                 total: data.total || 0,
+                pagination: data.pagination,
             };
         } catch (error) {
             return {
                 success: false,
                 data: [],
                 total: 0,
+                error: error instanceof Error ? error.message : 'Network error',
+            };
+        }
+    }
+
+    /**
+     * Get extended vehicle details (tire codes, model codes, etc.)
+     */
+    static async getExtendedDetails(licensePlate: string): Promise<ExtendedDetailsResult> {
+        try {
+            const response = await fetch(
+                `${API_URL}/vehicles/${encodeURIComponent(licensePlate)}/details`,
+                {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                }
+            );
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                return {
+                    success: false,
+                    data: null,
+                    error: data.message || 'Failed to get vehicle details',
+                };
+            }
+
+            return {
+                success: true,
+                data: data.data || null,
+            };
+        } catch (error) {
+            return {
+                success: false,
+                data: null,
                 error: error instanceof Error ? error.message : 'Network error',
             };
         }

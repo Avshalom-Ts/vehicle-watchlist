@@ -2,9 +2,11 @@ import {
     Controller,
     Get,
     Query,
+    Param,
     BadRequestException,
     HttpCode,
     HttpStatus,
+    NotFoundException,
 } from '@nestjs/common';
 import { VehiclesService } from './vehicles.service';
 import { SearchVehicleDto, FilterVehiclesDto } from './dto';
@@ -16,6 +18,7 @@ export class VehiclesController {
     /**
      * Search for a vehicle by license plate (PUBLIC)
      * GET /vehicles/search?plate=8689365
+     * Returns single exact match (no pagination needed)
      */
     @Get('search')
     @HttpCode(HttpStatus.OK)
@@ -35,7 +38,7 @@ export class VehiclesController {
 
     /**
      * Search for vehicles with filters (must be before :plate route)
-     * GET /vehicles/filter?manufacturer=Toyota&yearFrom=2020
+     * GET /vehicles/filter?manufacturer=Toyota&yearFrom=2020&page=1&limit=25
      */
     @Get('filter')
     @HttpCode(HttpStatus.OK)
@@ -62,19 +65,55 @@ export class VehiclesController {
             throw new BadRequestException('At least one filter is required (manufacturer, model, yearFrom, yearTo, color, fuelType, or ownership)');
         }
 
+        const page = query.page || 1;
+        const limit = query.limit || 25;
+        const offset = (page - 1) * limit;
+
         const result = await this.vehiclesService.searchWithFilters(filters, {
-            limit: query.limit,
-            offset: query.offset,
+            limit,
+            offset,
         });
 
         if (!result.success) {
             throw new BadRequestException(result.error || 'Failed to search vehicles');
         }
 
+        const totalPages = Math.ceil(result.total / limit);
+
         return {
             success: true,
             data: result.vehicles,
             total: result.total,
+            pagination: {
+                page,
+                limit,
+                totalPages,
+                hasNextPage: page < totalPages,
+                hasPrevPage: page > 1,
+            },
+        };
+    }
+
+    /**
+     * Get extended vehicle details by license plate (PUBLIC)
+     * GET /vehicles/:plate/details
+     */
+    @Get(':plate/details')
+    @HttpCode(HttpStatus.OK)
+    async getExtendedDetails(@Param('plate') plate: string) {
+        const result = await this.vehiclesService.getExtendedDetails(plate);
+
+        if (!result.success) {
+            throw new BadRequestException(result.error || 'Failed to get vehicle details');
+        }
+
+        if (!result.details) {
+            throw new NotFoundException('Vehicle not found');
+        }
+
+        return {
+            success: true,
+            data: result.details,
         };
     }
 }

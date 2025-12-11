@@ -11,12 +11,13 @@ import {
     CardTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Star, Calendar, Fuel, Palette, User, Car } from 'lucide-react';
+import { Star, Calendar, Fuel, Palette, User, Car, ExternalLink } from 'lucide-react';
 
 interface VehicleCardProps {
     vehicle: Vehicle;
     onSave?: (vehicle: Vehicle) => void;
     onStar?: (vehicle: Vehicle) => void;
+    onClick?: (vehicle: Vehicle) => void;
     showActions?: boolean;
     isInWatchlist?: boolean;
     isStarred?: boolean;
@@ -26,17 +27,32 @@ export function VehicleCard({
     vehicle,
     onSave,
     onStar,
+    onClick,
     isInWatchlist = false,
     isStarred = false,
 }: VehicleCardProps) {
+    const handleCardClick = (e: React.MouseEvent) => {
+        // Don't trigger card click when clicking on buttons
+        if ((e.target as HTMLElement).closest('button')) {
+            return;
+        }
+        onClick?.(vehicle);
+    };
+
     return (
-        <Card className="hover:shadow-lg transition-shadow">
+        <Card
+            className={`hover:shadow-lg transition-shadow ${onClick ? 'cursor-pointer hover:border-primary/50' : ''}`}
+            onClick={handleCardClick}
+        >
             <CardHeader className="pb-3">
                 <div className="flex items-start justify-between">
                     <div>
                         <CardTitle className="flex items-center gap-2">
                             <Car className="w-5 h-5" />
                             {vehicle.commercialName || vehicle.model}
+                            {onClick && (
+                                <ExternalLink className="w-4 h-4 text-muted-foreground" />
+                            )}
                         </CardTitle>
                         <CardDescription className="text-base mt-1">
                             {vehicle.manufacturer}

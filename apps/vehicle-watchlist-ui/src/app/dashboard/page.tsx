@@ -8,13 +8,13 @@ import { AuthService } from '@/lib/auth-service';
 import { WatchlistService } from '@/lib/watchlist-service';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Car, User } from 'lucide-react';
 
 export default function DashboardPage() {
     const router = useRouter();
     const [user, setUser] = useState<{ id: string; email: string; name: string } | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [watchlistCount, setWatchlistCount] = useState(0);
+    const [starredCount, setStarredCount] = useState(0);
 
     useEffect(() => {
         // Check authentication
@@ -26,10 +26,17 @@ export default function DashboardPage() {
         const userData = AuthService.getUser();
         setUser(userData);
 
-        // Fetch watchlist count
-        WatchlistService.getWatchlistCount()
-            .then(count => setWatchlistCount(count))
-            .catch(() => setWatchlistCount(0));
+        // Fetch watchlist and starred counts
+        Promise.all([
+            WatchlistService.getWatchlistCount(),
+            WatchlistService.getStarredCount()
+        ]).then(([total, starred]) => {
+            setWatchlistCount(total);
+            setStarredCount(starred);
+        }).catch(() => {
+            setWatchlistCount(0);
+            setStarredCount(0);
+        });
 
         setIsLoading(false);
     }, [router]);
@@ -98,10 +105,24 @@ export default function DashboardPage() {
                                 <CardDescription>Vehicles you're tracking</CardDescription>
                             </CardHeader>
                             <CardContent>
-                                <p className="text-3xl font-bold">{watchlistCount}</p>
-                                <p className="text-sm text-muted-foreground mt-1">
-                                    {watchlistCount === 0 ? 'No vehicles yet' : `vehicle${watchlistCount !== 1 ? 's' : ''} tracked`}
-                                </p>
+                                <div className='flex flex-row items-center justify-between'>
+                                    <div className='flex flex-col items-center'>
+                                        <p className="text-3xl font-bold">{watchlistCount}</p>
+                                        <p className="text-sm text-muted-foreground mt-1">
+                                            {watchlistCount === 0 ? 'No vehicles yet' : `Tracked`}
+                                        </p>
+                                    </div>
+                                    <div className='flex flex-col items-center'>
+                                        {starredCount > 0 && (
+                                            <p className='text-3xl font-bold'>
+                                                {starredCount}
+                                            </p>
+                                        )}
+                                        <p className="text-sm text-muted-foreground mt-1">
+                                            {starredCount === 0 ? 'No starred yet' : `Starred`}
+                                        </p>
+                                    </div>
+                                </div>
                             </CardContent>
                         </Card>
                     </Link>
