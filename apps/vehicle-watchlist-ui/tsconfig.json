@@ -10,7 +10,11 @@
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "lib": ["dom", "dom.iterable", "esnext"],
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
     "allowJs": true,
     "allowSyntheticDefaultImports": true,
     "forceConsistentCasingInFileNames": true,
@@ -20,28 +24,43 @@
         "name": "next"
       }
     ],
-    "types": ["jest", "node"],
+    "types": [
+      "jest",
+      "node"
+    ],
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"],
-      "@vehicle-watchlist/database": ["../../libs/database/src/index.ts"],
-      "@vehicle-watchlist/utils": ["../../libs/utils/src/index.ts"],
-      "@vehicle-watchlist/api": ["../../libs/api/src/index.ts"]
+      "@/*": [
+        "./src/*"
+      ],
+      "@vehicle-watchlist/database": [
+        "../../libs/database/src/index.ts"
+      ],
+      "@vehicle-watchlist/utils": [
+        "../../libs/utils/src/index.ts"
+      ],
+      "@vehicle-watchlist/api": [
+        "../../libs/api/src/index.ts"
+      ]
     }
   },
   "include": [
-    "**/*.ts",
-    "**/*.tsx",
     "**/*.js",
     "**/*.jsx",
-    "next-env.d.ts"
+    "**/*.ts",
+    "**/*.tsx",
+    "next-env.d.ts",
+    "../../dist/apps/vehicle-watchlist-ui/.next/types/**/*.ts"
   ],
   "exclude": [
     "node_modules",
     "jest.config.ts",
     "jest.config.cts",
+    "specs/**/*",
     "**/*.spec.ts",
     "**/*.test.ts",
+    "**/*.spec.tsx",
+    "**/*.test.tsx",
     "src/**/*.spec.ts",
     "src/**/*.test.ts"
   ]

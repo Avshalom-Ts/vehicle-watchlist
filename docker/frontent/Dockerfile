@@ -31,16 +31,32 @@ ENV NEXT_TELEMETRY_DISABLED=1
 RUN bun run nx build vehicle-watchlist-ui
 
 # Stage 3: Runner
-FROM nginx:alpine AS runner
+FROM node:20-alpine AS runner
+WORKDIR /app
 
-# Copy Next.js static export files from .next folder
-COPY --from=builder /app/dist/apps/vehicle-watchlist-ui/.next /usr/share/nginx/html
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
 
-# Copy nginx config
-COPY docker/frontent/nginx.conf /etc/nginx/conf.d/default.conf
+# Create non-root user for security
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
+
+# Copy standalone build output
+# NX builds to dist/apps/vehicle-watchlist-ui
+COPY --from=builder /app/dist/apps/vehicle-watchlist-ui/.next/standalone ./
+COPY --from=builder /app/dist/apps/vehicle-watchlist-ui/.next/static ./dist/apps/vehicle-watchlist-ui/.next/static
+COPY --from=builder /app/dist/apps/vehicle-watchlist-ui/public ./dist/apps/vehicle-watchlist-ui/public
+
+# Set correct ownership
+RUN chown -R nextjs:nodejs /app
+
+USER nextjs
 
 # Expose port
 EXPOSE 4200
 
-# Start nginx
-CMD ["nginx", "-g", "daemon off;"]
+ENV PORT=4200
+ENV HOSTNAME="0.0.0.0"
+
+# Start Next.js server
+CMD ["node", "dist/apps/vehicle-watchlist-ui/server.js"]

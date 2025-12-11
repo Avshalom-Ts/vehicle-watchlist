@@ -12,7 +12,7 @@
       "options": {
         "buildTarget": "vehicle-watchlist-ui:build",
         "dev": true,
-        "port": 3000
+        "port": 4200
       },
       "configurations": {
         "development": {
@@ -44,7 +44,7 @@
       "options": {
         "buildTarget": "vehicle-watchlist-ui:build",
         "dev": true,
-        "port": 3000
+        "port": 4200
       },
       "configurations": {
         "development": {

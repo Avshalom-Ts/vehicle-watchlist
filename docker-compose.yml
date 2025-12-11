@@ -102,9 +102,9 @@ services:
     depends_on:
       - server
     environment:
-      - NEXT_PUBLIC_API_URL=http://localhost:3000/api
+      - NEXT_PUBLIC_API_URL=http://server:3000/api
     ports:
-      - "4200:3000"
+      - "4200:4200"
     networks:
       - vehicle-watchlist-network
     healthcheck:
@@ -115,7 +115,7 @@ services:
           "--quiet",
           "--tries=1",
           "--spider",
-          "http://localhost:3000",
+          "http://localhost:4200",
         ]
       interval: 30s
       timeout: 10s
