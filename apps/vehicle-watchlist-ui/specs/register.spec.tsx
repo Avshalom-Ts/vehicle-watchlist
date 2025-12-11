@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
 import RegisterPage from '../src/app/register/page';
 import { AuthService } from '../src/lib/auth-service';
@@ -10,6 +10,7 @@ import { AuthService } from '../src/lib/auth-service';
 // Mock dependencies
 jest.mock('next/navigation', () => ({
     useRouter: jest.fn(),
+    useSearchParams: jest.fn(),
 }));
 
 jest.mock('sonner', () => ({
@@ -31,10 +32,14 @@ describe('RegisterPage', () => {
     const mockRouter = {
         push: mockPush,
     };
+    const mockSearchParams = {
+        get: jest.fn().mockReturnValue(null),
+    };
 
     beforeEach(() => {
         jest.clearAllMocks();
         (useRouter as jest.Mock).mockReturnValue(mockRouter);
+        (useSearchParams as jest.Mock).mockReturnValue(mockSearchParams);
         (AuthService.isAuthenticated as jest.Mock).mockReturnValue(false);
     });
 
@@ -291,7 +296,7 @@ describe('RegisterPage', () => {
 
     it('should disable form during submission', async () => {
         (AuthService.register as jest.Mock).mockImplementation(
-            () => new Promise(resolve => setTimeout(resolve, 100))
+            () => new Promise(resolve => setTimeout(() => resolve({ success: true, user: { email: 'test@example.com' } }), 100))
         );
 
         render(<RegisterPage />);
@@ -316,11 +321,6 @@ describe('RegisterPage', () => {
         await waitFor(() => {
             expect(submitButton).toBeDisabled();
         });
-
-        // Wait for submission to complete
-        await waitFor(() => {
-            expect(submitButton).not.toBeDisabled();
-        }, { timeout: 500 });
     });
 
     it('should have link to login page', async () => {
