@@ -60,7 +60,7 @@ services:
 
   # NestJS Backend API
   server:
-    image: ghcr.io/Avshalom-Ts/vehicle-watchlist-server:latest
+    image: ghcr.io/avshalom-ts/vehicle-watchlist-server:latest
     container_name: vehicle-watchlist-server
     restart: unless-stopped
     depends_on:
@@ -96,7 +96,7 @@ services:
 
   # Next.js Frontend Client
   client:
-    image: ghcr.io/Avshalom-Ts/vehicle-watchlist-client:latest
+    image: ghcr.io/avshalom-ts/vehicle-watchlist-client:latest
     container_name: vehicle-watchlist-client
     restart: unless-stopped
     depends_on:
