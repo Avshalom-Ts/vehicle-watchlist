@@ -7,10 +7,14 @@ const createMockVehicle = (overrides: Partial<Vehicle> = {}): Vehicle => ({
     id: 1,
     licensePlate: '8689365',
     manufacturer: 'פורד גרמניה',
+    manufacturerCode: 10,
     model: 'DA3',
+    modelCode: 100,
+    modelType: 'P',
     commercialName: 'FOCUS',
     year: 2009,
     color: 'אפור מטל',
+    colorCode: 5,
     fuelType: 'בנזין',
     ownership: 'פרטי',
     lastTestDate: '2025-02-11',
@@ -22,6 +26,7 @@ const createMockVehicle = (overrides: Partial<Vehicle> = {}): Vehicle => ({
     trimLevel: 'TREND',
     pollutionGroup: 15,
     safetyLevel: null,
+    registrationInstruction: null,
     firstOnRoad: '2009-2',
     ...overrides,
 });
@@ -34,6 +39,7 @@ describe('VehiclesService', () => {
         const mockGovIlApiService = {
             searchByLicensePlate: jest.fn(),
             searchWithFilters: jest.fn(),
+            searchWithQuery: jest.fn(),
         };
 
         const module: TestingModule = await Test.createTestingModule({
@@ -63,10 +69,14 @@ describe('VehiclesService', () => {
                         id: 1,
                         licensePlate: '8689365',
                         manufacturer: 'פורד גרמניה',
+                        manufacturerCode: 10,
                         model: 'DA3',
+                        modelCode: 100,
+                        modelType: 'P',
                         commercialName: 'FOCUS',
                         year: 2009,
                         color: 'אפור מטל',
+                        colorCode: 5,
                         fuelType: 'בנזין',
                         ownership: 'פרטי',
                         lastTestDate: '2025-02-11',
@@ -78,6 +88,7 @@ describe('VehiclesService', () => {
                         trimLevel: 'TREND',
                         pollutionGroup: 15,
                         safetyLevel: null,
+                        registrationInstruction: null,
                         firstOnRoad: '2009-2',
                     },
                 ],
@@ -115,10 +126,14 @@ describe('VehiclesService', () => {
                 id: 1,
                 licensePlate: '8689365',
                 manufacturer: 'פורד גרמניה',
+                manufacturerCode: 10,
                 model: 'DA3',
+                modelCode: 100,
+                modelType: 'P',
                 commercialName: 'FOCUS',
                 year: 2009,
                 color: 'אפור מטל',
+                colorCode: 5,
                 fuelType: 'בנזין',
                 ownership: 'פרטי',
                 lastTestDate: '2025-02-11',
@@ -130,6 +145,7 @@ describe('VehiclesService', () => {
                 trimLevel: 'TREND',
                 pollutionGroup: 15,
                 safetyLevel: null,
+                registrationInstruction: null,
                 firstOnRoad: '2009-2',
             };
 
@@ -172,14 +188,14 @@ describe('VehiclesService', () => {
 
     describe('searchWithFilters', () => {
         it('should return vehicles when filter search is successful', async () => {
-            const mockVehicle = createMockVehicle();
+            const mockVehicle = createMockVehicle({ year: 2009 });
             const mockResult = {
                 success: true,
                 vehicles: [mockVehicle],
                 total: 1,
             };
 
-            govIlApiService.searchWithFilters.mockResolvedValue(mockResult);
+            govIlApiService.searchWithQuery.mockResolvedValue(mockResult);
 
             const result = await service.searchWithFilters(
                 { manufacturer: 'פורד', yearFrom: 2008, yearTo: 2010 },
@@ -188,10 +204,10 @@ describe('VehiclesService', () => {
 
             expect(result.success).toBe(true);
             expect(result.vehicles.length).toBe(1);
-            // Service maps manufacturer to tozeret_nm
-            expect(govIlApiService.searchWithFilters).toHaveBeenCalledWith(
-                expect.objectContaining({ tozeret_nm: 'פורד' }),
-                { limit: 20, offset: 0 }
+            // Service now uses searchWithQuery for text-based searches
+            expect(govIlApiService.searchWithQuery).toHaveBeenCalledWith(
+                'פורד',
+                expect.objectContaining({ limit: 20, offset: 0 })
             );
         });
 
@@ -203,7 +219,7 @@ describe('VehiclesService', () => {
                 error: 'API error',
             };
 
-            govIlApiService.searchWithFilters.mockResolvedValue(mockResult);
+            govIlApiService.searchWithQuery.mockResolvedValue(mockResult);
 
             const result = await service.searchWithFilters(
                 { manufacturer: 'test' },
@@ -214,8 +230,8 @@ describe('VehiclesService', () => {
             expect(result.error).toBe('API error');
         });
 
-        it('should map filter fields to API field names', async () => {
-            govIlApiService.searchWithFilters.mockResolvedValue({
+        it('should combine multiple filter fields into search query', async () => {
+            govIlApiService.searchWithQuery.mockResolvedValue({
                 success: true,
                 vehicles: [],
                 total: 0,
@@ -229,15 +245,10 @@ describe('VehiclesService', () => {
                 ownership: 'פרטי',
             }, {});
 
-            expect(govIlApiService.searchWithFilters).toHaveBeenCalledWith(
-                {
-                    tozeret_nm: 'פורד',
-                    kinuy_mishari: 'FOCUS',
-                    tzeva_rechev: 'לבן',
-                    sug_delek_nm: 'בנזין',
-                    baalut: 'פרטי',
-                },
-                {}
+            // All text filters are combined into a single search query
+            expect(govIlApiService.searchWithQuery).toHaveBeenCalledWith(
+                'פורד FOCUS לבן בנזין פרטי',
+                expect.any(Object)
             );
         });
 
@@ -262,6 +273,32 @@ describe('VehiclesService', () => {
             // Only the 2009 vehicle should pass the year range filter
             expect(result.vehicles.length).toBe(1);
             expect(result.vehicles[0].year).toBe(2009);
+        });
+
+        it('should use searchWithFilters for year-only filter', async () => {
+            govIlApiService.searchWithFilters.mockResolvedValue({
+                success: true,
+                vehicles: [],
+                total: 0,
+            });
+
+            await service.searchWithFilters(
+                { yearFrom: 2009 },
+                { limit: 25 }
+            );
+
+            // When only yearFrom is provided, it uses exact filter
+            expect(govIlApiService.searchWithFilters).toHaveBeenCalledWith(
+                { shnat_yitzur: 2009 },
+                { limit: 25 }
+            );
+        });
+
+        it('should return error when no filters provided', async () => {
+            const result = await service.searchWithFilters({}, {});
+
+            expect(result.success).toBe(false);
+            expect(result.error).toBe('At least one search filter is required');
         });
     });
 });

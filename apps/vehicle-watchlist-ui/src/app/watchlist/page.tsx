@@ -51,7 +51,7 @@ export default function WatchlistPage() {
                 )
             );
             toast.success(item.isStarred ? 'Removed from starred' : 'Added to starred');
-        } catch (error) {
+        } catch (_error) {
             toast.error('Failed to update star status');
         }
     };
@@ -61,7 +61,7 @@ export default function WatchlistPage() {
             await WatchlistService.removeFromWatchlist(item.licensePlate);
             setWatchlist(prev => prev.filter(w => w.licensePlate !== item.licensePlate));
             toast.success('Vehicle removed from watchlist');
-        } catch (error) {
+        } catch (_error) {
             toast.error('Failed to remove vehicle');
         }
     };

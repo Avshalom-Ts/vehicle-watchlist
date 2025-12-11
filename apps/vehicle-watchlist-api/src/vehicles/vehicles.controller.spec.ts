@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { BadRequestException } from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { VehiclesController } from './vehicles.controller';
 import { VehiclesService } from './vehicles.service';
 
@@ -10,8 +10,8 @@ describe('VehiclesController', () => {
     beforeEach(async () => {
         const mockVehiclesService = {
             searchByPlate: jest.fn(),
-            getByPlate: jest.fn(),
             searchWithFilters: jest.fn(),
+            getExtendedDetails: jest.fn(),
         };
 
         const module: TestingModule = await Test.createTestingModule({
@@ -73,39 +73,53 @@ describe('VehiclesController', () => {
         });
     });
 
-    describe('getByPlate', () => {
-        it('should return vehicle when found', async () => {
-            const mockVehicle = {
+    describe('getExtendedDetails', () => {
+        it('should return extended details when found', async () => {
+            const mockDetails = {
                 id: 1,
                 licensePlate: '8689365',
-                manufacturer: 'פורד גרמניה',
-                commercialName: 'FOCUS',
+                manufacturerCode: 10,
+                modelCode: 100,
+                modelType: 'P',
+                frontTireLoadCode: 91,
+                rearTireLoadCode: 91,
+                frontTireSpeedCode: 'H',
+                rearTireSpeedCode: 'H',
+                towingInfo: null,
             };
 
-            vehiclesService.getByPlate.mockResolvedValue(mockVehicle as any);
+            vehiclesService.getExtendedDetails.mockResolvedValue({
+                success: true,
+                details: mockDetails as any,
+            });
 
-            const result = await controller.getByPlate('8689365');
+            const result = await controller.getExtendedDetails('8689365');
 
             expect(result).toEqual({
                 success: true,
-                data: mockVehicle,
+                data: mockDetails,
             });
         });
 
-        it('should return not found message when vehicle not found', async () => {
-            vehiclesService.getByPlate.mockResolvedValue(null);
+        it('should throw NotFoundException when vehicle not found', async () => {
+            vehiclesService.getExtendedDetails.mockResolvedValue({
+                success: true,
+                details: null,
+            });
 
-            const result = await controller.getByPlate('9999999');
+            await expect(controller.getExtendedDetails('9999999')).rejects.toThrow(
+                NotFoundException
+            );
+        });
 
-            expect(result).toEqual({
+        it('should throw BadRequestException when request fails', async () => {
+            vehiclesService.getExtendedDetails.mockResolvedValue({
                 success: false,
-                message: 'Vehicle not found',
-                data: null,
+                details: null,
+                error: 'API error',
             });
-        });
 
-        it('should throw BadRequestException when plate is missing', async () => {
-            await expect(controller.getByPlate('')).rejects.toThrow(
+            await expect(controller.getExtendedDetails('8689365')).rejects.toThrow(
                 BadRequestException
             );
         });
@@ -141,14 +155,12 @@ describe('VehiclesController', () => {
                 yearFrom: 2008,
                 yearTo: 2012,
                 limit: 20,
-                offset: 0,
+                page: 1,
             });
 
-            expect(result).toEqual({
-                success: true,
-                data: mockVehicles,
-                total: 2,
-            });
+            expect(result.success).toBe(true);
+            expect(result.data).toEqual(mockVehicles);
+            expect(result.total).toBe(2);
             expect(vehiclesService.searchWithFilters).toHaveBeenCalled();
         });
 
@@ -161,7 +173,7 @@ describe('VehiclesController', () => {
             });
 
             await expect(
-                controller.searchWithFilters({ manufacturer: 'test', limit: 20, offset: 0 })
+                controller.searchWithFilters({ manufacturer: 'test', limit: 20, page: 1 })
             ).rejects.toThrow(BadRequestException);
         });
 
@@ -172,16 +184,39 @@ describe('VehiclesController', () => {
                 total: 0,
             });
 
+            // page 3 with limit 50 should result in offset 100 (page-1)*limit
             await controller.searchWithFilters({
                 manufacturer: 'פורד',
                 limit: 50,
-                offset: 100,
+                page: 3,
             });
 
             expect(vehiclesService.searchWithFilters).toHaveBeenCalledWith(
                 expect.objectContaining({ manufacturer: 'פורד' }),
                 expect.objectContaining({ limit: 50, offset: 100 })
             );
+        });
+
+        it('should return pagination info in response', async () => {
+            vehiclesService.searchWithFilters.mockResolvedValue({
+                success: true,
+                vehicles: [],
+                total: 100,
+            });
+
+            const result = await controller.searchWithFilters({
+                manufacturer: 'פורד',
+                limit: 25,
+                page: 2,
+            });
+
+            expect(result.pagination).toEqual({
+                page: 2,
+                limit: 25,
+                totalPages: 4,
+                hasNextPage: true,
+                hasPrevPage: true,
+            });
         });
     });
 });

@@ -10,7 +10,7 @@ describe('WatchlistController', () => {
     let watchlistService: jest.Mocked<WatchlistService>;
 
     const mockUserId = new Types.ObjectId().toString();
-    const mockRequest = { user: { sub: mockUserId } };
+    const mockRequest = { user: { id: mockUserId } };
 
     const mockWatchlistItem = {
         _id: new Types.ObjectId(),

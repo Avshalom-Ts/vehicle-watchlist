@@ -2,7 +2,7 @@
 
 import React from 'react';
 
-import { useEffect, useState, Suspense, useRef, useCallback } from 'react';
+import { useEffect, useState, Suspense, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -38,7 +38,7 @@ function SearchContent() {
     const [currentPage, setCurrentPage] = useState(initialPage);
     const [pagination, setPagination] = useState<PaginationData | null>(null);
     const [totalResults, setTotalResults] = useState(0);
-    const [currentSearchPlate, setCurrentSearchPlate] = useState(initialPlate);
+    const [, setCurrentSearchPlate] = useState(initialPlate);
     const [currentFilters, setCurrentFilters] = useState<VehicleFilters | null>(null);
 
     // Vehicle details modal state
@@ -162,7 +162,7 @@ function SearchContent() {
         }
     };
 
-    const handleFilterSearch = async (filters: VehicleFilters, page: number = 1) => {
+    const handleFilterSearch = async (filters: VehicleFilters, page = 1) => {
         setIsLoading(true);
         setError(null);
         setHasSearched(true);
