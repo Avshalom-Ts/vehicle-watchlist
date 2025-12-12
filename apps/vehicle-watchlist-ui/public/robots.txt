@@ -1,0 +1,9 @@
+# Allow all crawlers
+User-agent: *
+Allow: /
+
+# Sitemap location
+Sitemap: https://vehicle-watchlist.az.labs.net/sitemap.xml
+
+# Crawl delay (optional, adjust as needed)
+Crawl-delay: 1
