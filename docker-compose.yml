@@ -67,7 +67,7 @@ services:
       mongodb:
         condition: service_healthy
     environment:
-      - MONGO_URI=mongodb://mongodb:27017/vehicle-watchlist
+      - MONGO_URI=mongodb://admin:admin123@mongodb:27017/vehicle-watchlist?authSource=admin
       - JWT_SECRET=${JWT_SECRET:-jwt-secret-key}
       - JWT_EXPIRES_IN=${JWT_EXPIRES_IN:-7d}
       - RESOURCE_ID=${RESOURCE_ID}
