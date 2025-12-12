@@ -168,7 +168,7 @@ describe('HeroSearch', () => {
 
             // Submit form
             const form = input.closest('form');
-            fireEvent.submit(form!);
+            if (form) fireEvent.submit(form);
 
             expect(mockPush).toHaveBeenCalledWith('/search?plate=1234567');
         });

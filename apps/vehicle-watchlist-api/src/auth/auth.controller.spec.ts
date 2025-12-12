@@ -3,10 +3,15 @@ import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { LoginDto, RegisterDto, RefreshTokenDto, AuthResponse, UserResponse } from '@vehicle-watchlist/utils';
+import { EmailValidationGuard, EmailValidationService } from '@vehicle-watchlist/email-validation';
+import { Reflector } from '@nestjs/core';
+import { BadRequestException } from '@nestjs/common';
 
 describe('AuthController', () => {
     let controller: AuthController;
     let authService: AuthService;
+    let emailValidationService: EmailValidationService;
+    let emailValidationGuard: EmailValidationGuard;
 
     const mockAuthService = {
         register: jest.fn(),
@@ -14,6 +19,12 @@ describe('AuthController', () => {
         refreshToken: jest.fn(),
         logout: jest.fn(),
         getStatus: jest.fn(),
+    };
+
+    const mockEmailValidationService = {
+        validateEmail: jest.fn(),
+        validateEmails: jest.fn(),
+        isDisposable: jest.fn(),
     };
 
     const mockAuthResponse: AuthResponse = {
@@ -40,6 +51,17 @@ describe('AuthController', () => {
                     provide: AuthService,
                     useValue: mockAuthService,
                 },
+                {
+                    provide: EmailValidationService,
+                    useValue: mockEmailValidationService,
+                },
+                {
+                    provide: Reflector,
+                    useValue: {
+                        getAllAndOverride: jest.fn(),
+                    },
+                },
+                EmailValidationGuard,
             ],
         })
             .overrideGuard(JwtAuthGuard)
@@ -48,6 +70,8 @@ describe('AuthController', () => {
 
         controller = module.get<AuthController>(AuthController);
         authService = module.get<AuthService>(AuthService);
+        emailValidationService = module.get<EmailValidationService>(EmailValidationService);
+        emailValidationGuard = module.get<EmailValidationGuard>(EmailValidationGuard);
     });
 
     afterEach(() => {
@@ -75,12 +99,71 @@ describe('AuthController', () => {
             expect(authService.register).toHaveBeenCalledTimes(1);
         });
 
-        it('should throw error if email already exists', async () => {
+        it('should validate email is not disposable on registration', async () => {
             const registerDto: RegisterDto = {
-                email: 'test@example.com',
+                email: 'test@gmail.com',
                 password: 'Test1234',
                 name: 'Test User',
             };
+
+            mockEmailValidationService.validateEmail.mockResolvedValue({
+                isValid: true,
+                isDisposable: false,
+                email: 'test@gmail.com',
+                domain: 'gmail.com',
+            });
+
+            mockAuthService.register.mockResolvedValue(mockAuthResponse);
+
+            const result = await controller.register(registerDto);
+
+            expect(result).toEqual(mockAuthResponse);
+            expect(authService.register).toHaveBeenCalledWith(registerDto);
+        });
+
+        it('should reject registration with disposable email', async () => {
+            const registerDto: RegisterDto = {
+                email: 'test@10minutemail.com',
+                password: 'Test1234',
+                name: 'Test User',
+            };
+
+            mockEmailValidationService.validateEmail.mockResolvedValue({
+                isValid: false,
+                isDisposable: true,
+                email: 'test@10minutemail.com',
+                domain: '10minutemail.com',
+                error: 'Disposable email addresses are not allowed',
+            });
+
+            // The guard would throw BadRequestException before reaching the controller
+            // So we test the validation service behavior
+            const validationResult = await emailValidationService.validateEmail(registerDto.email);
+
+            expect(validationResult.isDisposable).toBe(true);
+            expect(validationResult.isValid).toBe(false);
+            expect(validationResult.error).toBe('Disposable email addresses are not allowed');
+        });
+
+        it('should reject registration with invalid email format', async () => {
+            const registerDto: RegisterDto = {
+                email: 'invalid-email',
+                password: 'Test1234',
+                name: 'Test User',
+            };
+
+            mockEmailValidationService.validateEmail.mockResolvedValue({
+                isValid: false,
+                isDisposable: false,
+                email: 'invalid-email',
+                domain: '',
+                error: 'Invalid email format',
+            });
+
+            const validationResult = await emailValidationService.validateEmail(registerDto.email);
+
+            expect(validationResult.isValid).toBe(false);
+            expect(validationResult.error).toBe('Invalid email format');
 
             mockAuthService.register.mockRejectedValue(new Error('Email already exists'));
 

@@ -132,7 +132,7 @@ describe('VehicleCard', () => {
 
             // Click on the card (not on a button)
             const card = screen.getByText('FOCUS').closest('.hover\\:shadow-lg');
-            fireEvent.click(card!);
+            if (card) fireEvent.click(card);
 
             expect(handleClick).toHaveBeenCalledWith(mockVehicle);
         });
