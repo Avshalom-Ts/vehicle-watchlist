@@ -106,6 +106,57 @@ describe('AuthService', () => {
 
             await expect(AuthService.register(registerDto)).rejects.toThrow();
         });
+
+        it('should reject registration with disposable email', async () => {
+            const disposableDto: RegisterDto = {
+                email: 'test@10minutemail.com',
+                password: 'Test1234',
+                name: 'Test User',
+            };
+
+            const errorResponse = {
+                message: 'Disposable email addresses are not allowed',
+                statusCode: 400,
+            };
+
+            (global.fetch as jest.Mock).mockResolvedValueOnce({
+                ok: false,
+                status: 400,
+                json: async () => errorResponse,
+            });
+
+            await expect(AuthService.register(disposableDto)).rejects.toThrow(
+                'Disposable email addresses are not allowed'
+            );
+            expect(localStorageMock.getItem('access_token')).toBeNull();
+        });
+
+        it('should accept registration with valid email provider', async () => {
+            const validDto: RegisterDto = {
+                email: 'user@gmail.com',
+                password: 'Test1234',
+                name: 'Test User',
+            };
+
+            const validResponse = {
+                ...mockAuthResponse,
+                user: {
+                    ...mockAuthResponse.user,
+                    email: 'user@gmail.com',
+                },
+            };
+
+            (global.fetch as jest.Mock).mockResolvedValueOnce({
+                ok: true,
+                json: async () => validResponse,
+            });
+
+            const result = await AuthService.register(validDto);
+
+            expect(result).toEqual(validResponse);
+            expect(localStorageMock.getItem('access_token')).toBe('mock-access-token');
+            expect(localStorageMock.getItem('refresh_token')).toBe('mock-refresh-token');
+        });
     });
 
     describe('login', () => {

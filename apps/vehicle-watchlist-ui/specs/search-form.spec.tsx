@@ -53,9 +53,6 @@ describe('SearchForm', () => {
     const mockOnSearch = jest.fn();
     const mockOnFilterSearch = jest.fn();
 
-    // Helper to get the submit button (not the select trigger)
-    const getSubmitButton = () => screen.getByRole('button', { name: /^search$/i }) || screen.getByRole('button', { type: 'submit' });
-
     beforeEach(() => {
         jest.clearAllMocks();
     });
@@ -87,7 +84,7 @@ describe('SearchForm', () => {
             // Get the submit button by type
             const buttons = screen.getAllByRole('button');
             const submitButton = buttons.find(btn => btn.getAttribute('type') === 'submit');
-            fireEvent.click(submitButton!);
+            if (submitButton) fireEvent.click(submitButton);
 
             expect(mockOnSearch).toHaveBeenCalledWith('1234567');
         });
@@ -100,7 +97,7 @@ describe('SearchForm', () => {
 
             const buttons = screen.getAllByRole('button');
             const submitButton = buttons.find(btn => btn.getAttribute('type') === 'submit');
-            fireEvent.click(submitButton!);
+            if (submitButton) fireEvent.click(submitButton);
 
             expect(mockOnSearch).toHaveBeenCalledWith('12345678');
         });
@@ -113,7 +110,7 @@ describe('SearchForm', () => {
 
             const buttons = screen.getAllByRole('button');
             const submitButton = buttons.find(btn => btn.getAttribute('type') === 'submit');
-            fireEvent.click(submitButton!);
+            if (submitButton) fireEvent.click(submitButton);
 
             expect(mockOnSearch).toHaveBeenCalledWith('12-345-67');
         });
@@ -126,7 +123,7 @@ describe('SearchForm', () => {
 
             const buttons = screen.getAllByRole('button');
             const submitButton = buttons.find(btn => btn.getAttribute('type') === 'submit');
-            fireEvent.click(submitButton!);
+            if (submitButton) fireEvent.click(submitButton);
 
             await waitFor(() => {
                 expect(screen.getByText(/License plate must be 7-8 digits/i)).toBeInTheDocument();
@@ -139,7 +136,7 @@ describe('SearchForm', () => {
 
             const buttons = screen.getAllByRole('button');
             const submitButton = buttons.find(btn => btn.getAttribute('type') === 'submit');
-            fireEvent.click(submitButton!);
+            if (submitButton) fireEvent.click(submitButton);
 
             await waitFor(() => {
                 expect(screen.getByText(/Please enter a search value/i)).toBeInTheDocument();
@@ -210,7 +207,7 @@ describe('SearchForm', () => {
 
             // Submit the form
             const form = input.closest('form');
-            fireEvent.submit(form!);
+            if (form) fireEvent.submit(form);
 
             expect(mockOnSearch).toHaveBeenCalledWith('1234567');
         });
@@ -223,7 +220,7 @@ describe('SearchForm', () => {
             // Trigger error by submitting empty form
             const buttons = screen.getAllByRole('button');
             const submitButton = buttons.find(btn => btn.getAttribute('type') === 'submit');
-            fireEvent.click(submitButton!);
+            if (submitButton) fireEvent.click(submitButton);
 
             await waitFor(() => {
                 expect(screen.getByText(/Please enter a search value/i)).toBeInTheDocument();

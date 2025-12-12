@@ -12,6 +12,8 @@ import {
 } from '@vehicle-watchlist/utils';
 import { ZodValidationPipe } from '@vehicle-watchlist/utils';
 import { JwtAuthGuard } from './jwt-auth.guard';
+import { RateLimitPresets } from '@vehicle-watchlist/rate-limit';
+import { ValidateEmail, EmailValidationGuard } from '@vehicle-watchlist/email-validation';
 
 @Controller('auth')
 export class AuthController {
@@ -23,6 +25,9 @@ export class AuthController {
      * @returns AuthResponse containing JWT token and user info
      */
     @Post('register')
+    @UseGuards(EmailValidationGuard)
+    @ValidateEmail({ blockDisposable: true })
+    @RateLimitPresets.Auth() // 5 requests per 15 minutes
     @UsePipes(new ZodValidationPipe(registerSchema))
     async register(@Body() registerDto: RegisterDto): Promise<AuthResponse> {
         return this.authService.register(registerDto);
@@ -34,6 +39,7 @@ export class AuthController {
      * @returns AuthResponse containing JWT token and user info
      */
     @Post('login')
+    @RateLimitPresets.Auth() // 5 requests per 15 minutes
     @HttpCode(HttpStatus.OK)
     @UsePipes(new ZodValidationPipe(loginSchema))
     async login(@Body() loginDto: LoginDto): Promise<AuthResponse> {

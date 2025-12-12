@@ -7,10 +7,16 @@ import { AuthController } from './auth.controller';
 import { JwtStrategy } from './jwt.strategy';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { UsersModule } from '../users/users.module';
+import { EmailValidationModule } from '@vehicle-watchlist/email-validation';
 
 @Module({
     imports: [
         UsersModule,
+        EmailValidationModule.register({
+            options: {
+                apiKey: process.env.API_NINJA_KEY || '',
+            },
+        }),
         PassportModule.register({ defaultStrategy: 'jwt' }),
         JwtModule.registerAsync({
             imports: [ConfigModule],
