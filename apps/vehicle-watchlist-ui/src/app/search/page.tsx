@@ -281,9 +281,9 @@ function SearchContent() {
 
     return (
         <main className="flex-1 bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-slate-900 dark:to-slate-800">
-            <div className="container px-4 py-8 max-w-4xl mx-auto">
+            <div className="w-full px-3 sm:px-4 py-4 sm:py-8 max-w-4xl mx-auto">
                 {/* Back Button */}
-                <div className="mb-6">
+                <div className="mb-4 sm:mb-6">
                     <Button variant="ghost" size="sm" asChild>
                         <Link href="/">
                             <ArrowLeft className="w-4 h-4 mr-2" />
@@ -293,14 +293,14 @@ function SearchContent() {
                 </div>
 
                 {/* Header */}
-                <div className="text-center mb-6 sm:mb-8">
-                    <div className="flex justify-center mb-3 sm:mb-4">
+                <div className="text-center mb-4 sm:mb-6 md:mb-8">
+                    <div className="flex justify-center mb-2 sm:mb-3 md:mb-4">
                         <div className="p-2 sm:p-3 bg-primary/10 rounded-full">
                             <Car className="w-8 h-8 sm:w-10 sm:h-10 text-primary" />
                         </div>
                     </div>
-                    <h1 className="text-2xl sm:text-3xl font-bold mb-2">Vehicle Search</h1>
-                    <p className="text-sm sm:text-base text-muted-foreground px-4">
+                    <h1 className="text-xl sm:text-2xl md:text-3xl font-bold mb-2">Vehicle Search</h1>
+                    <p className="text-xs sm:text-sm md:text-base text-muted-foreground px-2 sm:px-4">
                         Search by license plate or use filters to find vehicles
                     </p>
                 </div>
@@ -317,10 +317,10 @@ function SearchContent() {
                     )}
                     <div
                         className={`
-                            bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm rounded-xl p-4 sm:p-6 shadow-lg mb-8
+                            bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm rounded-xl p-3 sm:p-4 md:p-6 shadow-lg mb-4 sm:mb-6 md:mb-8
                             transition-all duration-300 ease-in-out
                             ${isSearchSticky
-                                ? 'fixed top-16 left-0 right-0 z-40 mx-auto max-w-4xl rounded-t-none shadow-xl border-b border-border/50 px-4'
+                                ? 'fixed top-16 left-0 right-0 z-40 mx-auto max-w-4xl rounded-t-none shadow-xl border-b border-border/50 px-3 sm:px-4'
                                 : ''
                             }
                         `}
@@ -335,7 +335,7 @@ function SearchContent() {
                 </div>
 
                 {/* Results Section */}
-                <div className="space-y-4">
+                <div className="space-y-3 sm:space-y-4">
                     {/* Loading State */}
                     {isLoading && (
                         <div className="text-center py-12">
@@ -372,10 +372,10 @@ function SearchContent() {
 
                     {/* Results */}
                     {!isLoading && !error && vehicles.length > 0 && (
-                        <div className="space-y-4">
+                        <div className="space-y-3 sm:space-y-4">
                             <div className="flex items-center justify-between flex-wrap gap-2">
                                 <div>
-                                    <h2 className="text-lg font-semibold">
+                                    <h2 className="text-base sm:text-lg font-semibold">
                                         Search Results
                                     </h2>
                                     {pagination && (
@@ -389,7 +389,7 @@ function SearchContent() {
                                     )}
                                 </div>
                                 {!isAuthenticated && (
-                                    <p className="text-sm text-muted-foreground">
+                                    <p className="text-xs sm:text-sm text-muted-foreground w-full sm:w-auto text-center sm:text-left">
                                         <Link href="/login" className="text-primary hover:underline">
                                             Sign in
                                         </Link>{' '}
@@ -397,7 +397,7 @@ function SearchContent() {
                                     </p>
                                 )}
                             </div>
-                            <div className="grid gap-4">
+                            <div className="grid grid-cols-1 gap-3 sm:gap-4 w-full">
                                 {vehicles.map((vehicle) => (
                                     <VehicleCard
                                         key={vehicle.id}
@@ -414,7 +414,7 @@ function SearchContent() {
 
                             {/* Pagination */}
                             {pagination && pagination.totalPages > 1 && (
-                                <div className="pt-6 border-t">
+                                <div className="pt-4 sm:pt-6 border-t">
                                     <Pagination
                                         currentPage={currentPage}
                                         totalPages={pagination.totalPages}

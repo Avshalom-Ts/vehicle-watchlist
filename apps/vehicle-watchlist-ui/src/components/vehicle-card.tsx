@@ -68,7 +68,7 @@ export function VehicleCard({
                 </div>
             </CardHeader>
             <CardContent>
-                <div className="flex gap-4 text-sm">
+                <div className="flex gap-4 text-sm flex-wrap">
                     <div className="flex items-center gap-2">
                         <Calendar className="w-4 h-4 text-muted-foreground" />
                         <span className="text-muted-foreground">Year:</span>
