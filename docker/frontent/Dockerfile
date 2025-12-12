@@ -27,9 +27,7 @@ COPY --from=deps /app/package.json ./package.json
 COPY . .
 
 # Build the Next.js application (static export)
-# API URL is set at build time - use ARG for flexibility
-ARG NEXT_PUBLIC_API_URL=http://localhost:3000/api
-ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+# No need to set NEXT_PUBLIC_API_URL - uses relative /api which nginx proxies
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN bun run nx build vehicle-watchlist-ui
 

@@ -1,7 +1,8 @@
 import { AuthService } from './auth-service';
 import type { WatchlistItem, AddToWatchlistInput, UpdateWatchlistInput } from '@vehicle-watchlist/utils';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002/api';
+// Use relative URL so it works on any domain (localhost, CodeSandbox, production)
+const API_URL = process.env.NEXT_PUBLIC_API_URL || '/api';
 
 export interface WatchlistResponse {
     success: boolean;

@@ -1,6 +1,7 @@
 import { AuthService } from './auth-service';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002/api';
+// Use relative URL so it works on any domain (localhost, CodeSandbox, production)
+const API_URL = process.env.NEXT_PUBLIC_API_URL || '/api';
 
 export interface AnalyticsData {
     totalVehicles: number;
