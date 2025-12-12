@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { AuthService } from '@/lib/auth-service';
 import { AnalyticsService, AnalyticsData } from '@/lib/analytics-service';
 import { toast } from 'sonner';
+import { useI18n } from '@/lib/i18n-provider';
 import {
     ArrowLeft,
     Car,
@@ -49,6 +50,7 @@ const COLORS = [
 
 export default function AnalyticsPage() {
     const router = useRouter();
+    const { t, locale } = useI18n();
     const [isLoading, setIsLoading] = useState(true);
     const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
     const [error, setError] = useState<string | null>(null);
@@ -69,8 +71,8 @@ export default function AnalyticsPage() {
         const result = await AnalyticsService.getAnalytics();
 
         if (!result.success) {
-            setError(result.error || 'Failed to load analytics');
-            toast.error('Failed to load analytics');
+            setError(result.error || t('analytics.failedToLoad'));
+            toast.error(t('analytics.failedToLoad'));
         } else {
             setAnalytics(result.data);
         }
@@ -94,20 +96,20 @@ export default function AnalyticsPage() {
                         <Button variant="ghost" size="sm" asChild>
                             <Link href="/dashboard">
                                 <ArrowLeft className="w-4 h-4 mr-2" />
-                                Back to Dashboard
+                                {t('analytics.backToDashboard')}
                             </Link>
                         </Button>
                     </div>
                     <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-xl p-8 text-center">
                         <BarChart3 className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
                         <h3 className="text-xl font-semibold mb-2">
-                            {error || 'No Analytics Available'}
+                            {error || t('analytics.noDataAvailable')}
                         </h3>
                         <p className="text-muted-foreground mb-4">
-                            Add some vehicles to your watchlist to see analytics.
+                            {t('analytics.noDataDescription')}
                         </p>
                         <Button asChild>
-                            <Link href="/search">Search Vehicles</Link>
+                            <Link href="/search">{t('common.searchVehicles')}</Link>
                         </Button>
                     </div>
                 </div>
@@ -144,13 +146,13 @@ export default function AnalyticsPage() {
                     <Button variant="ghost" size="sm" asChild>
                         <Link href="/dashboard">
                             <ArrowLeft className="w-4 h-4 mr-2" />
-                            Back to Dashboard
+                            {t('analytics.backToDashboard')}
                         </Link>
                     </Button>
                     <Button variant="outline" size="sm" asChild>
                         <Link href="/watchlist">
                             <Car className="w-4 h-4 mr-2" />
-                            View Watchlist
+                            {t('analytics.viewWatchlist')}
                         </Link>
                     </Button>
                 </div>
@@ -162,9 +164,9 @@ export default function AnalyticsPage() {
                             <TrendingUp className="w-10 h-10 text-primary" />
                         </div>
                     </div>
-                    <h1 className="text-3xl font-bold mb-2">Watchlist Analytics</h1>
+                    <h1 className="text-3xl font-bold mb-2">{t('analytics.title')}</h1>
                     <p className="text-muted-foreground">
-                        Insights about your tracked vehicles
+                        {t('analytics.description')}
                     </p>
                 </div>
 
@@ -178,7 +180,7 @@ export default function AnalyticsPage() {
                                 </div>
                                 <div>
                                     <p className="text-2xl font-bold">{analytics.totalVehicles}</p>
-                                    <p className="text-sm text-muted-foreground">Total Vehicles</p>
+                                    <p className="text-sm text-muted-foreground">{t('analytics.totalVehicles')}</p>
                                 </div>
                             </div>
                         </CardContent>
@@ -192,7 +194,7 @@ export default function AnalyticsPage() {
                                 </div>
                                 <div>
                                     <p className="text-2xl font-bold">{analytics.starredCount}</p>
-                                    <p className="text-sm text-muted-foreground">Starred</p>
+                                    <p className="text-sm text-muted-foreground">{t('analytics.starred')}</p>
                                 </div>
                             </div>
                         </CardContent>
@@ -206,7 +208,7 @@ export default function AnalyticsPage() {
                                 </div>
                                 <div>
                                     <p className="text-2xl font-bold">{analytics.averageYear}</p>
-                                    <p className="text-sm text-muted-foreground">Avg. Year</p>
+                                    <p className="text-sm text-muted-foreground">{t('analytics.avgYear')}</p>
                                 </div>
                             </div>
                         </CardContent>
@@ -220,7 +222,7 @@ export default function AnalyticsPage() {
                                 </div>
                                 <div>
                                     <p className="text-2xl font-bold">{analytics.byManufacturer.length}</p>
-                                    <p className="text-sm text-muted-foreground">Manufacturers</p>
+                                    <p className="text-sm text-muted-foreground">{t('analytics.manufacturers')}</p>
                                 </div>
                             </div>
                         </CardContent>
@@ -235,12 +237,12 @@ export default function AnalyticsPage() {
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2">
                                     <PieChartIcon className="w-5 h-5" />
-                                    By Manufacturer
+                                    {t('analytics.byManufacturer')}
                                 </CardTitle>
-                                <CardDescription>Distribution of vehicles by manufacturer</CardDescription>
+                                <CardDescription>{t('analytics.manufacturerDistribution')}</CardDescription>
                             </CardHeader>
                             <CardContent>
-                                <div className="h-[300px] w-full">
+                                <div className="h-[300px] w-full" dir="ltr">
                                     <ResponsiveContainer width="100%" height={300} minWidth={200}>
                                         <PieChart>
                                             <Pie
@@ -276,12 +278,12 @@ export default function AnalyticsPage() {
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2">
                                     <BarChart3 className="w-5 h-5" />
-                                    By Year
+                                    {t('analytics.byYear')}
                                 </CardTitle>
-                                <CardDescription>Vehicles by manufacturing year</CardDescription>
+                                <CardDescription>{t('analytics.yearDistribution')}</CardDescription>
                             </CardHeader>
                             <CardContent>
-                                <div className="h-[300px] w-full">
+                                <div className="h-[300px] w-full" dir="ltr">
                                     <ResponsiveContainer width="100%" height={300} minWidth={200}>
                                         <BarChart data={yearData}>
                                             <CartesianGrid strokeDasharray="3 3" />
@@ -302,12 +304,12 @@ export default function AnalyticsPage() {
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2">
                                     <Fuel className="w-5 h-5" />
-                                    By Fuel Type
+                                    {t('analytics.byFuelType')}
                                 </CardTitle>
-                                <CardDescription>Distribution by fuel type</CardDescription>
+                                <CardDescription>{t('analytics.fuelTypeDistribution')}</CardDescription>
                             </CardHeader>
                             <CardContent>
-                                <div className="h-[300px] w-full">
+                                <div className="h-[300px] w-full" dir="ltr">
                                     <ResponsiveContainer width="100%" height={300} minWidth={200}>
                                         <PieChart>
                                             <Pie
@@ -343,12 +345,12 @@ export default function AnalyticsPage() {
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2">
                                     <Palette className="w-5 h-5" />
-                                    By Color
+                                    {t('analytics.byColor')}
                                 </CardTitle>
-                                <CardDescription>Top colors in your watchlist</CardDescription>
+                                <CardDescription>{t('analytics.topColors')}</CardDescription>
                             </CardHeader>
                             <CardContent>
-                                <div className="h-[300px] w-full">
+                                <div className="h-[300px] w-full" dir="ltr">
                                     <ResponsiveContainer width="100%" height={300} minWidth={200}>
                                         <BarChart data={colorData} layout="vertical">
                                             <CartesianGrid strokeDasharray="3 3" />
@@ -372,7 +374,7 @@ export default function AnalyticsPage() {
                             <CardHeader>
                                 <CardTitle className="text-base flex items-center gap-2">
                                     <Clock className="w-4 h-4" />
-                                    Oldest Vehicle
+                                    {t('analytics.oldestVehicle')}
                                 </CardTitle>
                             </CardHeader>
                             <CardContent>
@@ -390,7 +392,7 @@ export default function AnalyticsPage() {
                             <CardHeader>
                                 <CardTitle className="text-base flex items-center gap-2">
                                     <TrendingUp className="w-4 h-4" />
-                                    Newest Vehicle
+                                    {t('analytics.newestVehicle')}
                                 </CardTitle>
                             </CardHeader>
                             <CardContent>
@@ -408,12 +410,12 @@ export default function AnalyticsPage() {
                             <CardHeader>
                                 <CardTitle className="text-base flex items-center gap-2">
                                     <Calendar className="w-4 h-4" />
-                                    Year Range
+                                    {t('analytics.yearRange')}
                                 </CardTitle>
                             </CardHeader>
                             <CardContent>
                                 <p className="text-2xl font-bold">
-                                    {analytics.newestVehicle.year - analytics.oldestVehicle.year} years
+                                    {analytics.newestVehicle.year - analytics.oldestVehicle.year} {t('analytics.years')}
                                 </p>
                                 <p className="text-muted-foreground">
                                     {analytics.oldestVehicle.year} - {analytics.newestVehicle.year}
@@ -429,9 +431,9 @@ export default function AnalyticsPage() {
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2">
                                 <Clock className="w-5 h-5" />
-                                Recently Added
+                                {t('analytics.recentlyAdded')}
                             </CardTitle>
-                            <CardDescription>Last 5 vehicles added to your watchlist</CardDescription>
+                            <CardDescription>{t('analytics.last5Vehicles')}</CardDescription>
                         </CardHeader>
                         <CardContent>
                             <div className="space-y-3">
@@ -452,7 +454,7 @@ export default function AnalyticsPage() {
                                             </div>
                                         </div>
                                         <p className="text-sm text-muted-foreground">
-                                            {new Date(vehicle.createdAt).toLocaleDateString('he-IL')}
+                                            {new Date(vehicle.createdAt).toLocaleDateString(locale === 'he' ? 'he-IL' : 'en-US')}
                                         </p>
                                     </div>
                                 ))}

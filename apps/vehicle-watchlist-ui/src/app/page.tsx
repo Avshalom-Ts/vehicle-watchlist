@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { AuthService } from '@/lib/auth-service';
 import { HeroSearch } from '@/components/hero-search';
+import { useI18n } from '@/lib/i18n-provider';
 import {
   Car,
   Shield,
@@ -21,6 +22,7 @@ import {
 
 export default function Home() {
   const router = useRouter();
+  const { t } = useI18n();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -60,16 +62,16 @@ export default function Home() {
               className={`inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-white text-sm mb-8 transition-all duration-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
             >
               <Sparkles className="w-4 h-4" />
-              <span>Powered by Official Israeli Government Data</span>
+              <span>{t('home.badge')}</span>
             </div>
 
             {/* Main heading */}
             <h1
               className={`text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight text-white mb-6 transition-all duration-700 delay-100 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
             >
-              Track Your
+              {t('home.heroTitle')}
               <span className="block bg-gradient-to-r from-yellow-300 via-orange-300 to-pink-300 bg-clip-text text-transparent">
-                Vehicle Fleet
+                {t('home.heroSubtitle')}
               </span>
             </h1>
 
@@ -77,8 +79,7 @@ export default function Home() {
             <p
               className={`text-xl sm:text-2xl text-white/80 mb-10 max-w-2xl mx-auto transition-all duration-700 delay-200 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
             >
-              Search Israeli vehicles by license plate, save to your watchlist,
-              and get detailed analytics — all in one powerful platform.
+              {t('home.heroDescription')}
             </p>
 
             {/* CTA Buttons */}
@@ -91,7 +92,7 @@ export default function Home() {
                 asChild
               >
                 <Link href="/register">
-                  Get Started Free
+                  {t('home.getStartedFree')}
                   <ArrowRight className="w-5 h-5 ml-2" />
                 </Link>
               </Button>
@@ -103,7 +104,7 @@ export default function Home() {
               >
                 <Link href="/search">
                   <Search className="w-5 h-5 mr-2" />
-                  Try Advanced Search
+                  {t('search.advancedSearch')}
                 </Link>
               </Button>
             </div>
@@ -116,7 +117,7 @@ export default function Home() {
                 <div className="w-3 h-3 rounded-full bg-red-500" />
                 <div className="w-3 h-3 rounded-full bg-yellow-500" />
                 <div className="w-3 h-3 rounded-full bg-green-500" />
-                <span className="ml-3 text-sm text-muted-foreground">Quick Vehicle Search</span>
+                <span className="ml-3 text-sm text-muted-foreground">{t('home.quickSearch')}</span>
               </div>
               <HeroSearch className='w-full' />
             </div>
@@ -127,15 +128,15 @@ export default function Home() {
             >
               <div className="text-center">
                 <p className="text-3xl sm:text-4xl font-bold text-white">4M+</p>
-                <p className="text-sm sm:text-base text-white/60">Vehicles in Database</p>
+                <p className="text-sm sm:text-base text-white/60">{t('home.stats.vehiclesInDatabase')}</p>
               </div>
               <div className="text-center">
-                <p className="text-3xl sm:text-4xl font-bold text-white">Real-time</p>
-                <p className="text-sm sm:text-base text-white/60">Data Updates</p>
+                <p className="text-3xl sm:text-4xl font-bold text-white">{t('home.stats.realTime')}</p>
+                <p className="text-sm sm:text-base text-white/60">{t('home.stats.dataUpdates')}</p>
               </div>
               <div className="text-center">
                 <p className="text-3xl sm:text-4xl font-bold text-white">100%</p>
-                <p className="text-sm sm:text-base text-white/60">Free to Use</p>
+                <p className="text-sm sm:text-base text-white/60">{t('home.stats.freeToUse')}</p>
               </div>
             </div>
           </div>
@@ -157,11 +158,10 @@ export default function Home() {
         <div className="container px-4 max-w-6xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-3xl sm:text-4xl font-bold mb-4">
-              Everything You Need to
-              <span className="text-primary"> Track Vehicles</span>
+              {t('home.features.title')}
             </h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              A complete platform for searching, tracking, and analyzing Israeli vehicle data
+              {t('home.features.subtitle')}
             </p>
           </div>
 
@@ -173,9 +173,9 @@ export default function Home() {
                 <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center mb-6 shadow-lg shadow-blue-500/30 mx-auto">
                   <Search className="w-7 h-7 text-white" />
                 </div>
-                <h3 className="text-xl font-semibold mb-3">Instant Search</h3>
+                <h3 className="text-xl font-semibold mb-3">{t('home.features.vehicleSearch.title')}</h3>
                 <p className="text-muted-foreground">
-                  Look up any Israeli vehicle instantly by license plate number. Get comprehensive details in seconds.
+                  {t('home.features.vehicleSearch.description')}
                 </p>
               </div>
             </div>
@@ -187,9 +187,9 @@ export default function Home() {
                 <div className="w-14 h-14 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center mb-6 shadow-lg shadow-green-500/30 mx-auto">
                   <Shield className="w-7 h-7 text-white" />
                 </div>
-                <h3 className="text-xl font-semibold mb-3">Personal Watchlist</h3>
+                <h3 className="text-xl font-semibold mb-3">{t('home.features.watchlist.title')}</h3>
                 <p className="text-muted-foreground">
-                  Save vehicles to your personal watchlist. Keep track of multiple vehicles in one organized place.
+                  {t('home.features.watchlist.description')}
                 </p>
               </div>
             </div>
@@ -201,9 +201,9 @@ export default function Home() {
                 <div className="w-14 h-14 bg-gradient-to-br from-yellow-500 to-orange-500 rounded-xl flex items-center justify-center mb-6 shadow-lg shadow-yellow-500/30 mx-auto">
                   <Star className="w-7 h-7 text-white" />
                 </div>
-                <h3 className="text-xl font-semibold mb-3">Star Favorites</h3>
+                <h3 className="text-xl font-semibold mb-3">{t('home.features.secure.title')}</h3>
                 <p className="text-muted-foreground">
-                  Mark important vehicles as favorites for quick access. Organize your fleet with ease.
+                  {t('home.features.secure.description')}
                 </p>
               </div>
             </div>
@@ -215,9 +215,9 @@ export default function Home() {
                 <div className="w-14 h-14 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center mb-6 shadow-lg shadow-purple-500/30 mx-auto">
                   <BarChart3 className="w-7 h-7 text-white" />
                 </div>
-                <h3 className="text-xl font-semibold mb-3">Rich Analytics</h3>
+                <h3 className="text-xl font-semibold mb-3">{t('home.features.analytics.title')}</h3>
                 <p className="text-muted-foreground">
-                  Visualize your watchlist with beautiful charts. See distributions by manufacturer, year, and more.
+                  {t('home.features.analytics.description')}
                 </p>
               </div>
             </div>
@@ -229,9 +229,9 @@ export default function Home() {
                 <div className="w-14 h-14 bg-gradient-to-br from-cyan-500 to-blue-500 rounded-xl flex items-center justify-center mb-6 shadow-lg shadow-cyan-500/30 mx-auto">
                   <Car className="w-7 h-7 text-white" />
                 </div>
-                <h3 className="text-xl font-semibold mb-3">Detailed Info</h3>
+                <h3 className="text-xl font-semibold mb-3">{t('home.features.realtime.title')}</h3>
                 <p className="text-muted-foreground">
-                  Access comprehensive vehicle data including specs, test dates, ownership type, and tire details.
+                  {t('home.features.realtime.description')}
                 </p>
               </div>
             </div>
@@ -243,9 +243,9 @@ export default function Home() {
                 <div className="w-14 h-14 bg-gradient-to-br from-rose-500 to-red-500 rounded-xl flex items-center justify-center mb-6 shadow-lg shadow-rose-500/30 mx-auto">
                   <Zap className="w-7 h-7 text-white" />
                 </div>
-                <h3 className="text-xl font-semibold mb-3">Lightning Fast</h3>
+                <h3 className="text-xl font-semibold mb-3">{t('home.features.responsive.title')}</h3>
                 <p className="text-muted-foreground">
-                  Built with performance in mind. Get results instantly with our optimized search engine.
+                  {t('home.features.responsive.description')}
                 </p>
               </div>
             </div>
@@ -258,10 +258,10 @@ export default function Home() {
         <div className="container px-4 max-w-6xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-3xl sm:text-4xl font-bold mb-4">
-              How It Works
+              {t('home.howItWorks.title')}
             </h2>
             <p className="text-lg text-muted-foreground">
-              Get started in three simple steps
+              {t('dashboard.quickActions.description')}
             </p>
           </div>
 
@@ -271,9 +271,9 @@ export default function Home() {
               <div className="w-16 h-16 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-6 shadow-lg shadow-primary/30">
                 1
               </div>
-              <h3 className="text-xl font-semibold mb-3">Create Account</h3>
+              <h3 className="text-xl font-semibold mb-3">{t('home.howItWorks.step1.title')}</h3>
               <p className="text-muted-foreground">
-                Sign up for free in seconds. No credit card required.
+                {t('home.howItWorks.step1.description')}
               </p>
             </div>
 
@@ -282,9 +282,9 @@ export default function Home() {
               <div className="w-16 h-16 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-6 shadow-lg shadow-primary/30">
                 2
               </div>
-              <h3 className="text-xl font-semibold mb-3">Search Vehicles</h3>
+              <h3 className="text-xl font-semibold mb-3">{t('home.howItWorks.step2.title')}</h3>
               <p className="text-muted-foreground">
-                Enter a license plate number to find any Israeli vehicle.
+                {t('home.howItWorks.step2.description')}
               </p>
             </div>
 
@@ -293,9 +293,9 @@ export default function Home() {
               <div className="w-16 h-16 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-6 shadow-lg shadow-primary/30">
                 3
               </div>
-              <h3 className="text-xl font-semibold mb-3">Build Watchlist</h3>
+              <h3 className="text-xl font-semibold mb-3">{t('home.howItWorks.step3.title')}</h3>
               <p className="text-muted-foreground">
-                Save vehicles and track them with analytics.
+                {t('home.howItWorks.step3.description')}
               </p>
             </div>
           </div>
@@ -313,10 +313,10 @@ export default function Home() {
         <div className="container px-4 max-w-6xl mx-auto relative z-10">
           <div className="max-w-3xl mx-auto text-center">
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-6">
-              Ready to Start Tracking?
+              {t('home.cta.title')}
             </h2>
             <p className="text-xl text-white/80 mb-10">
-              Join thousands of users already using Vehicle Watchlist to manage their fleet.
+              {t('home.cta.description')}
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Button
@@ -325,7 +325,7 @@ export default function Home() {
                 asChild
               >
                 <Link href="/register">
-                  Create Free Account
+                  {t('home.cta.getStarted')}
                   <ArrowRight className="w-5 h-5 ml-2" />
                 </Link>
               </Button>
@@ -336,7 +336,7 @@ export default function Home() {
                 asChild
               >
                 <Link href="/login">
-                  Sign In
+                  {t('common.login')}
                 </Link>
               </Button>
             </div>
@@ -345,15 +345,15 @@ export default function Home() {
             <div className="flex flex-wrap items-center justify-center gap-6 mt-12 text-white/60">
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="w-5 h-5" />
-                <span>Free Forever</span>
+                <span>{t('home.stats.freeToUse')}</span>
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="w-5 h-5" />
-                <span>No Credit Card</span>
+                <span>{t('home.noCreditCard')}</span>
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="w-5 h-5" />
-                <span>Official Gov Data</span>
+                <span>{t('home.officialData')}</span>
               </div>
             </div>
           </div>
@@ -366,20 +366,20 @@ export default function Home() {
           <div className="flex flex-col items-center gap-4 text-center">
             <div className="flex items-center gap-2">
               <Car className="w-5 h-5 text-primary" />
-              <span className="font-semibold">Vehicle Watchlist</span>
+              <span className="font-semibold">{t('common.vehicleWatchlist')}</span>
             </div>
             <p className="text-sm text-muted-foreground">
-              Data provided by data.gov.il — Israeli Government Open Data
+              {t('footer.dataApi')}
             </p>
             <div className="flex items-center gap-4">
               <Link href="/search" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                Search
+                {t('common.search')}
               </Link>
               <Link href="/login" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                Login
+                {t('common.login')}
               </Link>
               <Link href="/register" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                Register
+                {t('common.register')}
               </Link>
             </div>
           </div>

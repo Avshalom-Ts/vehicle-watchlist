@@ -19,6 +19,7 @@ import {
 } from '@/components/ui/collapsible';
 import { Search, Loader2, ChevronDown, ChevronUp, X } from 'lucide-react';
 import { VehicleFilters } from '@/lib/vehicle-service';
+import { useI18n } from '@/lib/i18n-provider';
 
 type SearchType = 'plate' | 'manufacturer' | 'model' | 'color' | 'fuelType' | 'ownership' | 'all';
 
@@ -29,27 +30,8 @@ interface SearchFormProps {
     isLoading?: boolean;
 }
 
-const searchTypeLabels: Record<SearchType, string> = {
-    plate: 'License Plate',
-    manufacturer: 'Manufacturer',
-    model: 'Model',
-    color: 'Color',
-    fuelType: 'Fuel Type',
-    ownership: 'Ownership',
-    all: 'All Filters',
-};
-
-const searchTypePlaceholders: Record<SearchType, string> = {
-    plate: 'Enter license plate number (e.g., 1234567)',
-    manufacturer: 'Enter manufacturer (e.g., Toyota)',
-    model: 'Enter model name',
-    color: 'Enter color (e.g., White)',
-    fuelType: 'Enter fuel type (e.g., Petrol, Diesel)',
-    ownership: 'Enter ownership type (e.g., Private)',
-    all: 'manufacturer model color fuelType ownership yearFrom-yearTo',
-};
-
 export function SearchForm({ initialPlate = '', onSearch, onFilterSearch, isLoading = false }: SearchFormProps) {
+    const { t } = useI18n();
     const [searchType, setSearchType] = useState<SearchType>('plate');
     const [searchValue, setSearchValue] = useState(initialPlate);
     const [error, setError] = useState('');
@@ -96,7 +78,7 @@ export function SearchForm({ initialPlate = '', onSearch, onFilterSearch, isLoad
         setError('');
 
         if (!searchValue.trim()) {
-            setError('Please enter a search value');
+            setError(t('searchForm.enterSearchValue'));
             return;
         }
 
@@ -104,7 +86,7 @@ export function SearchForm({ initialPlate = '', onSearch, onFilterSearch, isLoad
             // License plate validation (7-8 digits, dashes allowed)
             const cleanPlate = searchValue.replace(/-/g, '');
             if (!/^\d{7,8}$/.test(cleanPlate)) {
-                setError('License plate must be 7-8 digits');
+                setError(t('searchForm.plateValidation'));
                 return;
             }
             onSearch(searchValue);
@@ -124,7 +106,7 @@ export function SearchForm({ initialPlate = '', onSearch, onFilterSearch, isLoad
             onFilterSearch(filters);
         } else {
             // Fallback: show error if trying non-plate search without filter handler
-            setError('Filter search not available. Please select "License Plate" to search.');
+            setError(t('searchForm.filterNotAvailable'));
         }
     };
 
@@ -149,14 +131,16 @@ export function SearchForm({ initialPlate = '', onSearch, onFilterSearch, isLoad
                     disabled={isLoading}
                 >
                     <SelectTrigger className="w-full md:w-48 h-12 order-2 md:order-1">
-                        <SelectValue placeholder="Search by..." />
+                        <SelectValue placeholder={t('searchForm.searchBy')} />
                     </SelectTrigger>
                     <SelectContent>
-                        {Object.entries(searchTypeLabels).map(([key, label]) => (
-                            <SelectItem key={key} value={key}>
-                                {label}
-                            </SelectItem>
-                        ))}
+                        <SelectItem value="plate">{t('searchForm.licensePlate')}</SelectItem>
+                        <SelectItem value="manufacturer">{t('searchForm.manufacturer')}</SelectItem>
+                        <SelectItem value="model">{t('searchForm.model')}</SelectItem>
+                        <SelectItem value="color">{t('searchForm.color')}</SelectItem>
+                        <SelectItem value="fuelType">{t('searchForm.fuelType')}</SelectItem>
+                        <SelectItem value="ownership">{t('searchForm.ownership')}</SelectItem>
+                        <SelectItem value="all">{t('searchForm.allFilters')}</SelectItem>
                     </SelectContent>
                 </Select>
 
@@ -164,7 +148,7 @@ export function SearchForm({ initialPlate = '', onSearch, onFilterSearch, isLoad
                 <div className="flex-1 relative order-1 md:order-2">
                     <Input
                         type="text"
-                        placeholder={searchTypePlaceholders[searchType]}
+                        placeholder={t(`searchForm.${searchType}Placeholder`)}
                         value={searchValue}
                         onChange={(e) => {
                             setSearchValue(e.target.value);
@@ -192,7 +176,7 @@ export function SearchForm({ initialPlate = '', onSearch, onFilterSearch, isLoad
                     ) : (
                         <Search className="w-5 h-5 mr-2" />
                     )}
-                    {isLoading ? 'Searching...' : 'Search'}
+                    {isLoading ? t('searchForm.searching') : t('searchForm.searchButton')}
                 </Button>
             </div>
 
@@ -211,14 +195,13 @@ export function SearchForm({ initialPlate = '', onSearch, onFilterSearch, isLoad
                                 ) : (
                                     <ChevronDown className="w-4 h-4 mr-2" />
                                 )}
-                                Advanced Filters
+                                {t('searchForm.advancedFilters')}
                             </Button>
 
                             {/* Help text for "All Filters" mode */}
                             {searchType === 'all' && (
                                 <p className="text-xs text-muted-foreground pl-12 pr-3">
-                                    Tip: Enter multiple search terms separated by spaces. Use year range like "2010-2020".
-                                    Example: "Toyota Corolla White 2015-2020"
+                                    {t('searchForm.allFiltersTip')}
                                 </p>
                             )}
                         </div>
@@ -226,11 +209,11 @@ export function SearchForm({ initialPlate = '', onSearch, onFilterSearch, isLoad
                     <CollapsibleContent className="pt-4">
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-md">
                             <div className="space-y-2">
-                                <Label htmlFor="yearFrom">Year From</Label>
+                                <Label htmlFor="yearFrom">{t('searchForm.yearFrom')}</Label>
                                 <Input
                                     id="yearFrom"
                                     type="number"
-                                    placeholder="1990"
+                                    placeholder={t('searchForm.yearFromPlaceholder')}
                                     min="1900"
                                     max="2100"
                                     value={yearFrom}
@@ -240,11 +223,11 @@ export function SearchForm({ initialPlate = '', onSearch, onFilterSearch, isLoad
                                 />
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="yearTo">Year To</Label>
+                                <Label htmlFor="yearTo">{t('searchForm.yearTo')}</Label>
                                 <Input
                                     id="yearTo"
                                     type="number"
-                                    placeholder="2024"
+                                    placeholder={t('searchForm.yearToPlaceholder')}
                                     min="1900"
                                     max="2100"
                                     value={yearTo}

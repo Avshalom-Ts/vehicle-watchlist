@@ -4,6 +4,7 @@ import * as React from 'react';
 import { ChevronLeft, ChevronRight, MoreHorizontal } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from './button';
+import { useI18n } from '@/lib/i18n-provider';
 
 interface PaginationProps {
     currentPage: number;
@@ -18,6 +19,7 @@ export function Pagination({
     onPageChange,
     className,
 }: PaginationProps) {
+    const { t } = useI18n();
     // Generate page numbers to display
     const getPageNumbers = () => {
         const pages: (number | 'ellipsis')[] = [];
@@ -84,7 +86,7 @@ export function Pagination({
                 className="gap-1"
             >
                 <ChevronLeft className="h-4 w-4" />
-                <span className="hidden sm:inline">Previous</span>
+                <span className="hidden sm:inline">{t('pagination.previous')}</span>
             </Button>
 
             {/* Page Numbers */}
@@ -121,7 +123,7 @@ export function Pagination({
                 disabled={currentPage >= totalPages}
                 className="gap-1"
             >
-                <span className="hidden sm:inline">Next</span>
+                <span className="hidden sm:inline">{t('pagination.next')}</span>
                 <ChevronRight className="h-4 w-4" />
             </Button>
         </nav>
@@ -143,14 +145,15 @@ export function PaginationInfo({
     itemsPerPage,
     className,
 }: PaginationInfoProps) {
+    const { t } = useI18n();
     const startItem = (currentPage - 1) * itemsPerPage + 1;
     const endItem = Math.min(currentPage * itemsPerPage, totalItems);
 
     return (
         <p className={cn('text-sm text-muted-foreground', className)}>
-            Showing <span className="font-medium">{startItem}</span> to{' '}
-            <span className="font-medium">{endItem}</span> of{' '}
-            <span className="font-medium">{totalItems.toLocaleString()}</span> results
+            {t('pagination.showing')} <span className="font-medium">{startItem}</span> {t('pagination.to')}{' '}
+            <span className="font-medium">{endItem}</span> {t('pagination.of')}{' '}
+            <span className="font-medium">{totalItems.toLocaleString()}</span> {t('pagination.results')}
         </p>
     );
 }

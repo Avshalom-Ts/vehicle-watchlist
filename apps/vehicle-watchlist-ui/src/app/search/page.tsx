@@ -15,10 +15,12 @@ import { WatchlistService } from '@/lib/watchlist-service';
 import { AuthService } from '@/lib/auth-service';
 import { toast } from 'sonner';
 import { ArrowLeft, AlertCircle, SearchX, Car } from 'lucide-react';
+import { useI18n } from '@/lib/i18n-provider';
 
 const DEFAULT_PAGE_SIZE = 25;
 
 function SearchContent() {
+    const { t } = useI18n();
     const router = useRouter();
     const searchParams = useSearchParams();
     const initialPlate = searchParams.get('plate') || '';
@@ -209,7 +211,7 @@ function SearchContent() {
                 ownership: vehicle.ownership,
                 isStarred: false,
             });
-            toast.success('Vehicle added to watchlist');
+            toast.success(t('search.addedToWatchlist'));
         } catch (error) {
             // Revert optimistic update on error
             setWatchlistPlates(prev => {
@@ -217,7 +219,7 @@ function SearchContent() {
                 newSet.delete(vehicle.licensePlate);
                 return newSet;
             });
-            toast.error(error instanceof Error ? error.message : 'Failed to add to watchlist');
+            toast.error(error instanceof Error ? error.message : t('search.failedToAddToWatchlist'));
         }
     };
 
@@ -263,7 +265,7 @@ function SearchContent() {
                 });
                 setWatchlistPlates(prev => new Set([...prev, vehicle.licensePlate]));
             }
-            toast.success(isCurrentlyStarred ? 'Removed from starred' : 'Added to starred');
+            toast.success(isCurrentlyStarred ? t('search.removedFromStarred') : t('search.addedToStarred'));
         } catch (error) {
             // Revert optimistic update on error
             setStarredPlates(prev => {
@@ -275,7 +277,7 @@ function SearchContent() {
                 }
                 return newSet;
             });
-            toast.error(error instanceof Error ? error.message : 'Failed to update star status');
+            toast.error(error instanceof Error ? error.message : t('search.failedToUpdateStar'));
         }
     };
 
@@ -287,7 +289,7 @@ function SearchContent() {
                     <Button variant="ghost" size="sm" asChild>
                         <Link href="/">
                             <ArrowLeft className="w-4 h-4 mr-2" />
-                            Back to Home
+                            {t('search.backToHome')}
                         </Link>
                     </Button>
                 </div>
@@ -299,9 +301,9 @@ function SearchContent() {
                             <Car className="w-8 h-8 sm:w-10 sm:h-10 text-primary" />
                         </div>
                     </div>
-                    <h1 className="text-xl sm:text-2xl md:text-3xl font-bold mb-2">Vehicle Search</h1>
+                    <h1 className="text-xl sm:text-2xl md:text-3xl font-bold mb-2">{t('search.vehicleSearch')}</h1>
                     <p className="text-xs sm:text-sm md:text-base text-muted-foreground px-2 sm:px-4">
-                        Search by license plate or use filters to find vehicles
+                        {t('search.searchDescription')}
                     </p>
                 </div>
 
@@ -341,7 +343,7 @@ function SearchContent() {
                         <div className="text-center py-12">
                             <div className="inline-flex items-center gap-2 text-muted-foreground">
                                 <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                                Searching...
+                                {t('search.searching')}
                             </div>
                         </div>
                     )}
@@ -351,7 +353,7 @@ function SearchContent() {
                         <div className="bg-destructive/10 border border-destructive/20 rounded-xl p-6 text-center">
                             <AlertCircle className="w-12 h-12 text-destructive mx-auto mb-4" />
                             <h3 className="text-lg font-semibold text-destructive mb-2">
-                                Search Error
+                                {t('search.searchError')}
                             </h3>
                             <p className="text-muted-foreground">{error}</p>
                         </div>
@@ -361,11 +363,9 @@ function SearchContent() {
                     {!isLoading && !error && hasSearched && vehicles.length === 0 && (
                         <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-xl p-8 text-center">
                             <SearchX className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-                            <h3 className="text-xl font-semibold mb-2">No Vehicle Found</h3>
+                            <h3 className="text-xl font-semibold mb-2">{t('search.noVehicleFound')}</h3>
                             <p className="text-muted-foreground">
-                                No vehicle was found with this license plate number.
-                                <br />
-                                Please check the number and try again.
+                                {t('search.noVehicleFoundDescription')}
                             </p>
                         </div>
                     )}
@@ -376,7 +376,7 @@ function SearchContent() {
                             <div className="flex items-center justify-between flex-wrap gap-2">
                                 <div>
                                     <h2 className="text-base sm:text-lg font-semibold">
-                                        Search Results
+                                        {t('search.searchResults')}
                                     </h2>
                                     {pagination && (
                                         <PaginationInfo
@@ -391,9 +391,9 @@ function SearchContent() {
                                 {!isAuthenticated && (
                                     <p className="text-xs sm:text-sm text-muted-foreground w-full sm:w-auto text-center sm:text-left">
                                         <Link href="/login" className="text-primary hover:underline">
-                                            Sign in
+                                            {t('search.signIn')}
                                         </Link>{' '}
-                                        to save vehicles to your watchlist
+                                        {t('search.signInToSave')}
                                     </p>
                                 )}
                             </div>

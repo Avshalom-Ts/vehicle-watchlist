@@ -17,10 +17,12 @@ import {
     CardTitle,
 } from '@/components/ui/card';
 import { AuthService } from '@/lib/auth-service';
+import { useI18n } from '@/lib/i18n-provider';
 
 function RegisterContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
+    const { t } = useI18n();
     const redirectUrl = searchParams.get('redirect') || '/dashboard';
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
@@ -47,29 +49,29 @@ function RegisterContent() {
         const trimmedEmail = email.trim();
 
         if (name.length < 2) {
-            newErrors.name = 'Name must be at least 2 characters';
+            newErrors.name = t('auth.validation.nameMinLength');
         }
 
         if (trimmedEmail.length === 0) {
-            newErrors.email = 'Email is required';
+            newErrors.email = t('auth.validation.emailRequired');
         } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
-            newErrors.email = 'Invalid email address';
+            newErrors.email = t('auth.validation.emailInvalid');
         }
 
         if (password.length < 8) {
-            newErrors.password = 'Password must be at least 8 characters';
+            newErrors.password = t('auth.validation.passwordMinLength');
         } else if (!/[A-Z]/.test(password)) {
-            newErrors.password = 'Password must contain at least one uppercase letter';
+            newErrors.password = t('auth.validation.passwordUppercase');
         } else if (!/[a-z]/.test(password)) {
-            newErrors.password = 'Password must contain at least one lowercase letter';
+            newErrors.password = t('auth.validation.passwordLowercase');
         } else if (!/[0-9]/.test(password)) {
-            newErrors.password = 'Password must contain at least one number';
+            newErrors.password = t('auth.validation.passwordNumber');
         }
 
         if (confirmPassword.length === 0) {
-            newErrors.confirmPassword = 'Please confirm your password';
+            newErrors.confirmPassword = t('auth.validation.confirmPasswordRequired');
         } else if (password !== confirmPassword) {
-            newErrors.confirmPassword = 'Passwords do not match';
+            newErrors.confirmPassword = t('auth.validation.passwordsMismatch');
         }
 
         setErrors(newErrors);
@@ -93,12 +95,12 @@ function RegisterContent() {
                 password,
             });
 
-            toast.success('Account created successfully!');
+            toast.success(t('auth.accountCreated'));
 
             // Redirect to the intended page or dashboard after successful registration
             router.push(redirectUrl);
         } catch (error) {
-            toast.error(error instanceof Error ? error.message : 'Registration failed. Please try again.');
+            toast.error(error instanceof Error ? error.message : t('auth.registrationFailed'));
             setIsLoading(false);
         }
     };
@@ -108,20 +110,20 @@ function RegisterContent() {
             <Card className="w-full max-w-md">
                 <CardHeader className="space-y-1">
                     <CardTitle className="text-3xl font-bold text-center">
-                        Create Account
+                        {t('auth.signUp')}
                     </CardTitle>
                     <CardDescription className="text-center">
-                        Enter your information to get started
+                        {t('auth.signUpDescription')}
                     </CardDescription>
                 </CardHeader>
                 <form onSubmit={handleSubmit}>
                     <CardContent className="space-y-4">
                         <div className="space-y-2">
-                            <Label htmlFor="name">Full Name</Label>
+                            <Label htmlFor="name">{t('auth.name')}</Label>
                             <Input
                                 id="name"
                                 type="text"
-                                placeholder="John Doe"
+                                placeholder={t('auth.namePlaceholder')}
                                 value={name}
                                 onChange={(e) => {
                                     setName(e.target.value);
@@ -137,11 +139,11 @@ function RegisterContent() {
                             )}
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="email">Email</Label>
+                            <Label htmlFor="email">{t('auth.email')}</Label>
                             <Input
                                 id="email"
                                 type="text"
-                                placeholder="name@example.com"
+                                placeholder={t('auth.emailPlaceholder')}
                                 value={email}
                                 onChange={(e) => {
                                     setEmail(e.target.value);
@@ -160,11 +162,11 @@ function RegisterContent() {
                             )}
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="password">Password</Label>
+                            <Label htmlFor="password">{t('auth.password')}</Label>
                             <Input
                                 id="password"
                                 type="password"
-                                placeholder="Create a password"
+                                placeholder={t('auth.createPassword')}
                                 value={password}
                                 onChange={(e) => {
                                     setPassword(e.target.value);
@@ -179,15 +181,15 @@ function RegisterContent() {
                                 <p className="text-sm text-red-500">{errors.password}</p>
                             )}
                             <p className="text-xs text-muted-foreground">
-                                Must be at least 8 characters with uppercase, lowercase, and number
+                                {t('auth.passwordRequirements')}
                             </p>
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="confirmPassword">Confirm Password</Label>
+                            <Label htmlFor="confirmPassword">{t('auth.confirmPassword')}</Label>
                             <Input
                                 id="confirmPassword"
                                 type="password"
-                                placeholder="Confirm your password"
+                                placeholder={t('auth.confirmPasswordPlaceholder')}
                                 value={confirmPassword}
                                 onChange={(e) => {
                                     setConfirmPassword(e.target.value);
@@ -209,15 +211,15 @@ function RegisterContent() {
                             className="w-full"
                             disabled={isLoading}
                         >
-                            {isLoading ? 'Creating account...' : 'Create Account'}
+                            {isLoading ? t('auth.creatingAccount') : t('auth.signUpButton')}
                         </Button>
                         <p className="text-sm text-center text-muted-foreground">
-                            Already have an account?{' '}
+                            {t('auth.alreadyHaveAccount')}{' '}
                             <Link
                                 href="/login"
                                 className="text-primary hover:underline font-medium"
                             >
-                                Sign in
+                                {t('auth.signInHere')}
                             </Link>
                         </p>
                     </CardFooter>
