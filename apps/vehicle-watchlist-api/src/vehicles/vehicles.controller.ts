@@ -10,6 +10,7 @@ import {
 } from '@nestjs/common';
 import { VehiclesService } from './vehicles.service';
 import { SearchVehicleDto, FilterVehiclesDto } from './dto';
+import { RateLimit, RateLimitPresets } from '@vehicle-watchlist/rate-limit';
 
 @Controller('vehicles')
 export class VehiclesController {
@@ -21,6 +22,7 @@ export class VehiclesController {
      * Returns single exact match (no pagination needed)
      */
     @Get('search')
+    @RateLimitPresets.Moderate() // 30 requests per minute
     @HttpCode(HttpStatus.OK)
     async search(@Query() query: SearchVehicleDto) {
         const result = await this.vehiclesService.searchByPlate(query.plate);
@@ -41,6 +43,7 @@ export class VehiclesController {
      * GET /vehicles/filter?manufacturer=Toyota&yearFrom=2020&page=1&limit=25
      */
     @Get('filter')
+    @RateLimitPresets.Moderate() // 30 requests per minute
     @HttpCode(HttpStatus.OK)
     async searchWithFilters(@Query() query: FilterVehiclesDto) {
         const filters = {
