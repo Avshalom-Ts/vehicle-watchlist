@@ -9,9 +9,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { WatchlistService, WatchlistItem } from '@/lib/watchlist-service';
 import { AuthService } from '@/lib/auth-service';
 import { toast } from 'sonner';
-import { ArrowLeft, Car, Star, Trash2, Calendar, Fuel, Palette, User, SearchX, ArrowRight, FileText } from 'lucide-react';
+import { ArrowLeft, Car, Star, Trash2, Calendar, Fuel, Palette, User, SearchX, ArrowRight, FileText, Download } from 'lucide-react';
 import { VehicleNotesModal } from '@/components/vehicle-notes-modal';
 import { useI18n } from '@/lib/i18n-provider';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import { addHebrewFontSupport, fixHebrewText } from '@/lib/pdf-hebrew-font';
 
 export default function WatchlistPage() {
     const router = useRouter();
@@ -71,6 +74,109 @@ export default function WatchlistPage() {
         }
     };
 
+    const handleDownload = async () => {
+        if (watchlist.length === 0) {
+            toast.error(t('watchlist.noVehiclesToDownload'));
+            return;
+        }
+
+        try {
+            // Create new PDF document
+            let doc = new jsPDF({
+                orientation: 'portrait',
+                unit: 'mm',
+                format: 'a4',
+                putOnlyUsedFonts: true
+            });
+
+            // Load and add Hebrew font support
+            doc = await addHebrewFontSupport(doc);
+            doc.setFont('LinBiolinum');
+
+            // Add title (bilingual)
+            doc.setFontSize(20);
+            doc.text('Vehicle Watchlist', 105, 15, { align: 'center' });
+            doc.setFontSize(16);
+            doc.text(fixHebrewText('רשימת רכבים'), 105, 23, { align: 'center' });
+
+            // Add date and count
+            doc.setFontSize(10);
+            doc.text(`Generated: ${new Date().toLocaleDateString('heb-IL')}`, 14, 32);
+            doc.text(`Total Vehicles: ${watchlist.length}`, 14, 37);
+
+            // Prepare table data - fix Hebrew text for RTL
+            const tableData = watchlist.map(item => [
+                item.licensePlate || '-',
+                fixHebrewText(item.manufacturer || '-'),
+                fixHebrewText(item.commercialName || item.model || '-'),
+                item.year?.toString() || '-',
+                fixHebrewText(item.color || '-'),
+                fixHebrewText(item.fuelType || '-'),
+                fixHebrewText(item.ownership || '-'),
+                new Date(item.createdAt).toLocaleDateString('heb-IL')
+            ]);
+
+            // Generate table with Hebrew font support
+            autoTable(doc, {
+                startY: 43,
+                head: [['License Plate', 'Manufacturer', 'Model', 'Year', 'Color', 'Fuel', 'Ownership', 'Added']],
+                body: tableData,
+                theme: 'striped',
+                headStyles: {
+                    fillColor: [59, 130, 246],
+                    textColor: [255, 255, 255], // White text
+                    fontSize: 9,
+                    fontStyle: 'bold',
+                    halign: 'center',
+                    font: 'LinBiolinum'
+                },
+                styles: {
+                    fontSize: 8,
+                    cellPadding: 2.5,
+                    font: 'LinBiolinum',
+                    fontStyle: 'normal',
+                    overflow: 'linebreak',
+                    cellWidth: 'wrap',
+                    textColor: [0, 0, 0] // Black text for all data rows
+                },
+                columnStyles: {
+                    0: { cellWidth: 23, halign: 'center' },
+                    1: { cellWidth: 28, halign: 'center' },
+                    2: { cellWidth: 28, halign: 'center' },
+                    3: { cellWidth: 13, halign: 'center' },
+                    4: { cellWidth: 22, halign: 'center' },
+                    5: { cellWidth: 22, halign: 'center' },
+                    6: { cellWidth: 22, halign: 'center' },
+                    7: { cellWidth: 24, halign: 'center' }
+                },
+                margin: { left: 14, right: 14 }
+            });
+
+            // Add footer with page numbers
+            const pageCount = (doc as any).internal.getNumberOfPages();
+            doc.setFont('LinBiolinum');
+            for (let i = 1; i <= pageCount; i++) {
+                doc.setPage(i);
+                doc.setFontSize(8);
+                doc.text(
+                    `Page ${i} of ${pageCount}`,
+                    doc.internal.pageSize.getWidth() / 2,
+                    doc.internal.pageSize.getHeight() - 10,
+                    { align: 'center' }
+                );
+            }
+
+            // Download the PDF
+            const filename = `watchlist-${new Date().toISOString().split('T')[0]}.pdf`;
+            doc.save(filename);
+
+            toast.success(t('watchlist.downloadSuccess'));
+        } catch (error) {
+            console.error('Failed to download watchlist:', error);
+            toast.error(t('watchlist.downloadFailed'));
+        }
+    };
+
     if (isLoading) {
         return (
             <main className="flex-1 flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-slate-900 dark:to-slate-800">
@@ -90,6 +196,21 @@ export default function WatchlistPage() {
                             {t('watchlist.backToDashboard')}
                         </Link>
                     </Button>
+
+                    {/* Download Button */}
+                    {watchlist.length > 0 && (
+                        <div className="flex justify-center gap-2 mt-4">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={handleDownload}
+                            >
+                                <Download className="w-4 h-4 mr-2" />
+                                {t('watchlist.downloadPDF')}
+                            </Button>
+                        </div>
+                    )}
+
                     <Button variant="ghost" size="sm" asChild>
                         <Link href="/search">
                             {t('watchlist.searchVehicles')}
@@ -100,11 +221,6 @@ export default function WatchlistPage() {
 
                 {/* Header */}
                 <div className="text-center mb-8">
-                    <div className="flex justify-center mb-4">
-                        <div className="p-3 bg-primary/10 rounded-full">
-                            <Car className="w-10 h-10 text-primary" />
-                        </div>
-                    </div>
                     <h1 className="text-3xl font-bold mb-2">{t('watchlist.myWatchlist')}</h1>
                     <p className="text-muted-foreground">
                         {watchlist.length} {watchlist.length === 1 ? t('watchlist.vehicle') : t('watchlist.vehicles')} {t('watchlist.vehiclesCount')}

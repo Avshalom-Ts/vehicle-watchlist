@@ -243,7 +243,11 @@
     "addedToStarred": "Added to starred",
     "failedToUpdateStar": "Failed to update star status",
     "failedToRemove": "Failed to remove vehicle",
-    "failedToLoad": "Failed to load watchlist"
+    "failedToLoad": "Failed to load watchlist",
+    "downloadPDF": "Download PDF",
+    "downloadSuccess": "Watchlist downloaded successfully",
+    "downloadFailed": "Failed to download watchlist",
+    "noVehiclesToDownload": "No vehicles to download"
   },
   "analytics": {
     "title": "Watchlist Analytics",

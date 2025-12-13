@@ -243,7 +243,11 @@
     "addedToStarred": "נוסף למועדפים",
     "failedToUpdateStar": "עדכון סטטוס הכוכב נכשל",
     "failedToRemove": "הסרת הרכב נכשלה",
-    "failedToLoad": "טעינת רשימת המעקב נכשלה"
+    "failedToLoad": "טעינת רשימת המעקב נכשלה",
+    "downloadPDF": "הורד PDF",
+    "downloadSuccess": "רשימת המעקב הורדה בהצלחה",
+    "downloadFailed": "הורדת רשימת המעקב נכשלה",
+    "noVehiclesToDownload": "אין רכבים להורדה"
   },
   "analytics": {
     "title": "אנליטיקת רשימת מעקב",
