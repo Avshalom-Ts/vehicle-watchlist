@@ -80,9 +80,10 @@ export class EmailValidationService {
             );
             
             // Log more details about the error
-            if (error.response) {
-                this.logger.error(`API Error Status: ${error.response.status}`);
-                this.logger.error(`API Error Data:`, error.response.data);
+            if (error && typeof error === 'object' && 'response' in error) {
+                const axiosError = error as { response: { status: number; data: unknown } };
+                this.logger.error(`API Error Status: ${axiosError.response.status}`);
+                this.logger.error(`API Error Data:`, axiosError.response.data);
             }
 
             // On API error, fall back to basic validation

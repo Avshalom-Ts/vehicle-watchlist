@@ -81,7 +81,7 @@ describe('EmailValidationService', () => {
                 isDisposable: true,
                 email: 'test@10minutemail.com',
                 domain: '10minutemail.com',
-                error: 'Disposable email addresses are not allowed',
+                error: 'Real email addresses are required',
             });
         });
 

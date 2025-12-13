@@ -111,26 +111,25 @@ describe('Watchlist Schemas', () => {
             expect(result.success).toBe(false);
         });
 
-        it('should reject notes longer than 500 characters', () => {
+        it('should accept watchlist item without notes', () => {
             const input = {
                 licensePlate: '1234567',
                 manufacturer: 'Toyota',
                 model: 'Corolla',
                 year: 2020,
-                notes: 'a'.repeat(501),
             };
 
             const result = addToWatchlistSchema.safeParse(input);
-            expect(result.success).toBe(false);
+            expect(result.success).toBe(true);
         });
 
-        it('should accept notes exactly 500 characters', () => {
+        it('should accept watchlist item with isStarred', () => {
             const input = {
                 licensePlate: '1234567',
                 manufacturer: 'Toyota',
                 model: 'Corolla',
                 year: 2020,
-                notes: 'a'.repeat(500),
+                isStarred: true,
             };
 
             const result = addToWatchlistSchema.safeParse(input);
@@ -144,29 +143,14 @@ describe('Watchlist Schemas', () => {
             expect(result.success).toBe(true);
         });
 
-        it('should validate notes update', () => {
-            const result = updateWatchlistSchema.safeParse({ notes: 'Updated notes' });
-            expect(result.success).toBe(true);
-        });
-
-        it('should validate isStarred update', () => {
+        it('should validate isStarred update to true', () => {
             const result = updateWatchlistSchema.safeParse({ isStarred: true });
             expect(result.success).toBe(true);
         });
 
-        it('should validate both fields update', () => {
-            const result = updateWatchlistSchema.safeParse({
-                notes: 'Updated notes',
-                isStarred: false,
-            });
+        it('should validate isStarred update to false', () => {
+            const result = updateWatchlistSchema.safeParse({ isStarred: false });
             expect(result.success).toBe(true);
-        });
-
-        it('should reject notes longer than 500 characters', () => {
-            const result = updateWatchlistSchema.safeParse({
-                notes: 'a'.repeat(501),
-            });
-            expect(result.success).toBe(false);
         });
 
         it('should reject non-boolean isStarred', () => {

@@ -58,8 +58,9 @@ describe('WatchlistService', () => {
                 expect.stringContaining('/watchlist'),
                 expect.objectContaining({
                     method: 'GET',
+                    credentials: 'include',
                     headers: expect.objectContaining({
-                        Authorization: `Bearer ${mockToken}`,
+                        'Content-Type': 'application/json',
                     }),
                 })
             );
@@ -139,9 +140,9 @@ describe('WatchlistService', () => {
                 expect.stringContaining('/watchlist'),
                 expect.objectContaining({
                     method: 'POST',
+                    credentials: 'include',
                     headers: expect.objectContaining({
                         'Content-Type': 'application/json',
-                        Authorization: `Bearer ${mockToken}`,
                     }),
                     body: JSON.stringify(addDto),
                 })

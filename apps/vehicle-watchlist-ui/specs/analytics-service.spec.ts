@@ -75,8 +75,9 @@ describe('AnalyticsService', () => {
                 expect.stringContaining('/watchlist/analytics'),
                 expect.objectContaining({
                     method: 'GET',
+                    credentials: 'include',
                     headers: expect.objectContaining({
-                        Authorization: `Bearer ${mockToken}`,
+                        'Content-Type': 'application/json',
                     }),
                 })
             );
@@ -141,7 +142,7 @@ describe('AnalyticsService', () => {
             expect(result.error).toBe('Network error. Please try again.');
         });
 
-        it('should include auth header when token exists', async () => {
+        it('should include credentials for authenticated requests', async () => {
             mockFetch.mockResolvedValueOnce({
                 ok: true,
                 json: () => Promise.resolve({
@@ -152,8 +153,8 @@ describe('AnalyticsService', () => {
 
             await AnalyticsService.getAnalytics();
 
-            const headers = mockFetch.mock.calls[0][1].headers;
-            expect(headers.Authorization).toBe(`Bearer ${mockToken}`);
+            const callOptions = mockFetch.mock.calls[0][1];
+            expect(callOptions.credentials).toBe('include');
         });
 
         it('should not include auth header when no token', async () => {

@@ -51,7 +51,8 @@ export class PromptSearchService {
     try {
       return await this.parseWithOllama(sanitized, prompt);
     } catch (error) {
-      this.logger.warn(`Ollama failed: ${error.message}. Using basic extraction.`);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      this.logger.warn(`Ollama failed: ${errorMessage}. Using basic extraction.`);
     }
 
     // Final fallback: Basic keyword extraction

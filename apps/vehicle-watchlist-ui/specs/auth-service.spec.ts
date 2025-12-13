@@ -49,7 +49,7 @@ describe('AuthService', () => {
             name: 'Test User',
         };
 
-        it('should register successfully and store tokens', async () => {
+        it('should register successfully and store user info', async () => {
             (global.fetch as jest.Mock).mockResolvedValueOnce({
                 ok: true,
                 json: async () => mockAuthResponse,
@@ -65,11 +65,11 @@ describe('AuthService', () => {
                     headers: {
                         'Content-Type': 'application/json',
                     },
+                    credentials: 'include',
                     body: JSON.stringify(registerDto),
                 }
             );
-            expect(localStorageMock.getItem('access_token')).toBe('mock-access-token');
-            expect(localStorageMock.getItem('refresh_token')).toBe('mock-refresh-token');
+            // Tokens are in HTTP-only cookies, only user info is stored
             expect(localStorageMock.getItem('user')).toBe(JSON.stringify(mockAuthResponse.user));
         });
 
@@ -86,7 +86,7 @@ describe('AuthService', () => {
             });
 
             await expect(AuthService.register(registerDto)).rejects.toThrow('Email already exists');
-            expect(localStorageMock.getItem('access_token')).toBeNull();
+            expect(localStorageMock.getItem('user')).toBeNull();
         });
 
         it('should handle network errors', async () => {
@@ -154,8 +154,8 @@ describe('AuthService', () => {
             const result = await AuthService.register(validDto);
 
             expect(result).toEqual(validResponse);
-            expect(localStorageMock.getItem('access_token')).toBe('mock-access-token');
-            expect(localStorageMock.getItem('refresh_token')).toBe('mock-refresh-token');
+            // Tokens are in HTTP-only cookies, only user info is stored
+            expect(localStorageMock.getItem('user')).toBe(JSON.stringify(validResponse.user));
         });
     });
 
@@ -165,7 +165,7 @@ describe('AuthService', () => {
             password: 'Test1234',
         };
 
-        it('should login successfully and store tokens', async () => {
+        it('should login successfully and store user info', async () => {
             (global.fetch as jest.Mock).mockResolvedValueOnce({
                 ok: true,
                 json: async () => mockAuthResponse,
@@ -181,11 +181,11 @@ describe('AuthService', () => {
                     headers: {
                         'Content-Type': 'application/json',
                     },
+                    credentials: 'include',
                     body: JSON.stringify(loginDto),
                 }
             );
-            expect(localStorageMock.getItem('access_token')).toBe('mock-access-token');
-            expect(localStorageMock.getItem('refresh_token')).toBe('mock-refresh-token');
+            // Tokens are in HTTP-only cookies, only user info is stored
             expect(localStorageMock.getItem('user')).toBe(JSON.stringify(mockAuthResponse.user));
         });
 
@@ -219,34 +219,32 @@ describe('AuthService', () => {
     });
 
     describe('logout', () => {
-        it('should clear all tokens from localStorage', () => {
-            localStorageMock.setItem('access_token', 'token');
-            localStorageMock.setItem('refresh_token', 'refresh');
+        it('should clear user info from localStorage', async () => {
+            (global.fetch as jest.Mock).mockResolvedValueOnce({
+                ok: true,
+                json: async () => ({}),
+            });
+
             localStorageMock.setItem('user', JSON.stringify(mockAuthResponse.user));
 
-            AuthService.logout();
+            await AuthService.logout();
 
-            expect(localStorageMock.getItem('access_token')).toBeNull();
-            expect(localStorageMock.getItem('refresh_token')).toBeNull();
+            // Only user info is cleared, tokens are in HTTP-only cookies
             expect(localStorageMock.getItem('user')).toBeNull();
         });
 
-        it('should work even if no tokens exist', () => {
-            expect(() => AuthService.logout()).not.toThrow();
-            expect(localStorageMock.getItem('access_token')).toBeNull();
+        it('should work even if no user info exists', async () => {
+            (global.fetch as jest.Mock).mockResolvedValueOnce({
+                ok: true,
+                json: async () => ({}),
+            });
+
+            await expect(AuthService.logout()).resolves.not.toThrow();
         });
     });
 
     describe('getAccessToken', () => {
-        it('should return access token if it exists', () => {
-            localStorageMock.setItem('access_token', 'mock-token');
-
-            const token = AuthService.getAccessToken();
-
-            expect(token).toBe('mock-token');
-        });
-
-        it('should return null if no token exists', () => {
+        it('should return null (tokens are in HTTP-only cookies)', () => {
             const token = AuthService.getAccessToken();
 
             expect(token).toBeNull();
@@ -276,18 +274,18 @@ describe('AuthService', () => {
     });
 
     describe('isAuthenticated', () => {
-        it('should return true if access token exists', () => {
-            localStorageMock.setItem('access_token', 'mock-token');
+        it('should return true if user info exists in localStorage', () => {
+            localStorageMock.setItem('user', JSON.stringify({ id: '1', email: 'test@test.com', name: 'Test' }));
 
             expect(AuthService.isAuthenticated()).toBe(true);
         });
 
-        it('should return false if no access token exists', () => {
+        it('should return false if no user info exists', () => {
             expect(AuthService.isAuthenticated()).toBe(false);
         });
 
-        it('should return false if access token is empty', () => {
-            localStorageMock.setItem('access_token', '');
+        it('should return false if user info is empty', () => {
+            localStorageMock.setItem('user', '');
 
             expect(AuthService.isAuthenticated()).toBe(false);
         });
