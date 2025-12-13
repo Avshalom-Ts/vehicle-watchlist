@@ -7,6 +7,7 @@ import { EmailValidationModule } from '@vehicle-watchlist/email-validation';
 import { AuthModule } from '../auth/auth.module';
 import { VehiclesModule } from '../vehicles/vehicles.module';
 import { WatchlistModule } from '../watchlist/watchlist.module';
+import { AiSearchModule } from '../ai-search/ai-search.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { WatchlistModule } from '../watchlist/watchlist.module';
     AuthModule,
     VehiclesModule,
     WatchlistModule,
+    AiSearchModule,
   ],
   controllers: [AppController],
   providers: [AppService],

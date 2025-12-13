@@ -19,9 +19,8 @@
       "@vehicle-watchlist/utils": ["libs/utils/src/index.ts"],
       "@vehicle-watchlist/api": ["libs/api/src/index.ts"],
       "@vehicle-watchlist/rate-limit": ["libs/rate-limit/src/index.ts"],
-      "@vehicle-watchlist/email-validation": [
-        "libs/email-validation/src/index.ts"
-      ]
+      "@vehicle-watchlist/email-validation": ["libs/email-validation/src/index.ts"],
+      "@vehicle-watchlist/prompt-search": ["libs/prompt-search/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]
