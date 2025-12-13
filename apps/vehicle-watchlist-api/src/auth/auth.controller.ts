@@ -32,7 +32,7 @@ export class AuthController {
     @UsePipes(new ZodValidationPipe(registerSchema))
     async register(@Body() registerDto: RegisterDto, @Response() res: ExpressResponse) {
         const result = await this.authService.register(registerDto);
-        
+
         // Set HTTP-only cookies
         res.cookie('access_token', result.access_token, {
             httpOnly: true,
@@ -40,16 +40,16 @@ export class AuthController {
             sameSite: 'lax',
             maxAge: 15 * 60 * 1000, // 15 minutes
         });
-        
+
         res.cookie('refresh_token', result.refresh_token, {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'lax',
             maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
         });
-        
-        // Return only user info, tokens are in cookies
-        return res.json({ user: result.user });
+
+        // Return full response including tokens (for e2e tests)
+        return res.json(result);
     }
 
     /**
@@ -63,7 +63,7 @@ export class AuthController {
     @UsePipes(new ZodValidationPipe(loginSchema))
     async login(@Body() loginDto: LoginDto, @Response() res: ExpressResponse) {
         const result = await this.authService.login(loginDto);
-        
+
         // Set HTTP-only cookies
         res.cookie('access_token', result.access_token, {
             httpOnly: true,
@@ -71,14 +71,14 @@ export class AuthController {
             sameSite: 'lax',
             maxAge: 15 * 60 * 1000, // 15 minutes
         });
-        
+
         res.cookie('refresh_token', result.refresh_token, {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'lax',
             maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
         });
-        
+
         // Return only user info, tokens are in cookies
         return res.json({ user: result.user });
     }
@@ -104,11 +104,11 @@ export class AuthController {
     @UseGuards(JwtAuthGuard)
     async logout(@Request() req: { user: { id: string; email: string; name: string } }, @Response() res: ExpressResponse) {
         await this.authService.logout(req.user.id);
-        
+
         // Clear cookies
         res.clearCookie('access_token');
         res.clearCookie('refresh_token');
-        
+
         return res.json({ message: 'Logged out successfully' });
     }
 

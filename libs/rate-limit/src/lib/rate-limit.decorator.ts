@@ -33,37 +33,58 @@ export const RateLimit = (options: Partial<RateLimitOptions> | null) =>
 
 /**
  * Pre-configured rate limit presets for common use cases
+ * These are automatically relaxed in non-production environments for testing
  */
 export const RateLimitPresets = {
     /**
      * Strict rate limit for sensitive operations
-     * 5 requests per minute
+     * Production: 5 requests per minute
+     * Test/Dev: 1000 requests per minute
      */
-    Strict: () => RateLimit({ windowSec: 60, max: 5 }),
+    Strict: () => RateLimit({
+        windowSec: 60,
+        max: process.env.NODE_ENV === 'production' ? 5 : 1000
+    }),
 
     /**
      * Moderate rate limit for general API usage
-     * 30 requests per minute
+     * Production: 30 requests per minute
+     * Test/Dev: 1000 requests per minute
      */
-    Moderate: () => RateLimit({ windowSec: 60, max: 30 }),
+    Moderate: () => RateLimit({
+        windowSec: 60,
+        max: process.env.NODE_ENV === 'production' ? 30 : 1000
+    }),
 
     /**
      * Relaxed rate limit for public endpoints
-     * 100 requests per minute
+     * Production: 100 requests per minute
+     * Test/Dev: 10000 requests per minute
      */
-    Relaxed: () => RateLimit({ windowSec: 60, max: 100 }),
+    Relaxed: () => RateLimit({
+        windowSec: 60,
+        max: process.env.NODE_ENV === 'production' ? 100 : 10000
+    }),
 
     /**
      * Per-hour rate limit for heavy operations
-     * 100 requests per hour
+     * Production: 100 requests per hour
+     * Test/Dev: 10000 requests per hour
      */
-    Hourly: () => RateLimit({ windowSec: 3600, max: 100 }),
+    Hourly: () => RateLimit({
+        windowSec: 3600,
+        max: process.env.NODE_ENV === 'production' ? 100 : 10000
+    }),
 
     /**
      * Authentication rate limit
-     * 5 requests per 15 minutes
+     * Production: 5 requests per 15 minutes
+     * Test/Dev: 1000 requests per 15 minutes
      */
-    Auth: () => RateLimit({ windowSec: 900, max: 5 }),
+    Auth: () => RateLimit({
+        windowSec: 900,
+        max: process.env.NODE_ENV === 'production' ? 5 : 1000
+    }),
 
     /**
      * Disable rate limiting
