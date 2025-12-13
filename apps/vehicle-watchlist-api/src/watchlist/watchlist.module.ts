@@ -1,12 +1,18 @@
 import { Module } from '@nestjs/common';
-import { WatchlistModule as WatchlistDbModule } from '@vehicle-watchlist/database';
+import { MongooseModule } from '@nestjs/mongoose';
+import { WatchlistModule as WatchlistDbModule, VehicleNote, VehicleNoteSchema } from '@vehicle-watchlist/database';
 import { WatchlistController } from './watchlist.controller';
 import { WatchlistService } from './watchlist.service';
+import { VehicleNoteController } from './vehicle-note.controller';
+import { VehicleNoteService } from './vehicle-note.service';
 
 @Module({
-    imports: [WatchlistDbModule],
-    controllers: [WatchlistController],
-    providers: [WatchlistService],
-    exports: [WatchlistService],
+    imports: [
+        WatchlistDbModule,
+        MongooseModule.forFeature([{ name: VehicleNote.name, schema: VehicleNoteSchema }]),
+    ],
+    controllers: [WatchlistController, VehicleNoteController],
+    providers: [WatchlistService, VehicleNoteService],
+    exports: [WatchlistService, VehicleNoteService],
 })
 export class WatchlistModule { }

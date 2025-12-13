@@ -4,3 +4,4 @@ export * from './lib/user.module';
 export * from './lib/watchlist.module';
 export * from './lib/schemas/user.schema';
 export * from './lib/schemas/watchlist.schema';
+export * from './lib/schemas/vehicle-note.schema';
