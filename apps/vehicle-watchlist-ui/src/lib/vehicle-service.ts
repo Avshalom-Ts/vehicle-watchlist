@@ -75,7 +75,66 @@ export interface VehicleFilters {
     limit?: number;
 }
 
+export interface AiSearchResult extends VehicleSearchResult {
+    parsedPrompt?: {
+        confidence: number;
+        extractedFilters: VehicleFilters;
+        extractedEntities?: any[];
+        suggestions?: string[];
+    };
+}
+
 export class VehicleService {
+    /**
+     * Search vehicles using AI-powered natural language (public endpoint)
+     * Supports Hebrew and English prompts
+     */
+    static async searchWithAI(
+        prompt: string,
+        options: { page?: number; limit?: number } = {}
+    ): Promise<AiSearchResult> {
+        try {
+            const response = await fetch(`${API_URL}/ai-search`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    prompt,
+                    page: options.page || 1,
+                    limit: options.limit || 25,
+                }),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                return {
+                    success: false,
+                    data: [],
+                    total: 0,
+                    error: data.error || 'AI search failed',
+                    parsedPrompt: data.parsedPrompt,
+                };
+            }
+
+            return {
+                success: true,
+                data: data.data || [],
+                total: data.total || 0,
+                pagination: data.pagination,
+                parsedPrompt: data.parsedPrompt,
+            };
+        } catch (error) {
+            return {
+                success: false,
+                data: [],
+                total: 0,
+                error: error instanceof Error ? error.message : 'Network error',
+            };
+        }
+    }
+
     /**
      * Search for vehicles by license plate (public endpoint)
      */

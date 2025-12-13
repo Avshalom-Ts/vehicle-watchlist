@@ -10,11 +10,11 @@ import { SearchForm } from '@/components/search-form';
 import { VehicleCard } from '@/components/vehicle-card';
 import { VehicleDetailsModal } from '@/components/vehicle-details-modal';
 import { Pagination, PaginationInfo } from '@/components/ui/pagination';
-import { VehicleService, Vehicle, VehicleFilters, PaginationInfo as PaginationData } from '@/lib/vehicle-service';
+import { VehicleService, Vehicle, VehicleFilters, PaginationInfo as PaginationData, AiSearchResult } from '@/lib/vehicle-service';
 import { WatchlistService } from '@/lib/watchlist-service';
 import { AuthService } from '@/lib/auth-service';
 import { toast } from 'sonner';
-import { ArrowLeft, AlertCircle, SearchX, Car } from 'lucide-react';
+import { ArrowLeft, AlertCircle, SearchX, Car, Sparkles } from 'lucide-react';
 import { useI18n } from '@/lib/i18n-provider';
 
 const DEFAULT_PAGE_SIZE = 25;
@@ -42,6 +42,8 @@ function SearchContent() {
     const [totalResults, setTotalResults] = useState(0);
     const [, setCurrentSearchPlate] = useState(initialPlate);
     const [currentFilters, setCurrentFilters] = useState<VehicleFilters | null>(null);
+    const [currentAiPrompt, setCurrentAiPrompt] = useState<string | null>(null);
+    const [aiParsedInfo, setAiParsedInfo] = useState<AiSearchResult['parsedPrompt'] | null>(null);
 
     // Vehicle details modal state
     const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
@@ -157,20 +159,20 @@ function SearchContent() {
 
     const handlePageChange = (page: number) => {
         console.log('handlePageChange called with page:', page, 'currentFilters:', currentFilters);
-        if (currentFilters) {
+        if (currentAiPrompt) {
+            handleAiSearch(currentAiPrompt, page);
+        } else if (currentFilters) {
             handleFilterSearch(currentFilters, page);
-            // Scroll to top of results
-            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
+        // Scroll to top of results
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
     const handleFilterSearch = async (filters: VehicleFilters, page = 1) => {
         setIsLoading(true);
         setError(null);
-        setHasSearched(true);
-        setCurrentPage(page);
-        setCurrentFilters(filters);
-        setCurrentSearchPlate(''); // Clear plate search state when doing filter search
+        setCurrentAiPrompt(null); // Clear AI prompt state
+        setAiParsedInfo(null);
 
         const result = await VehicleService.searchWithFilters({ ...filters, page, limit: DEFAULT_PAGE_SIZE });
 
@@ -182,6 +184,51 @@ function SearchContent() {
             setPagination(null);
             setTotalResults(0);
             return;
+        }
+
+        setVehicles(result.data);
+        setPagination(result.pagination || null);
+        setTotalResults(result.total);
+    };
+
+    const handleAiSearch = async (prompt: string, page = 1) => {
+        setIsLoading(true);
+        setError(null);
+        setHasSearched(true);
+        setCurrentPage(page);
+        setCurrentAiPrompt(prompt);
+        setCurrentSearchPlate(''); // Clear plate search state
+        setCurrentFilters(null); // Clear filter search state
+
+        const result = await VehicleService.searchWithAI(prompt, { page, limit: DEFAULT_PAGE_SIZE });
+
+        setIsLoading(false);
+
+        if (!result.success) {
+            setError(result.error || 'AI search failed');
+            setVehicles([]);
+            setPagination(null);
+            setTotalResults(0);
+            setAiParsedInfo(result.parsedPrompt || null);
+            
+            // Show AI suggestions if available
+            if (result.parsedPrompt?.suggestions && result.parsedPrompt.suggestions.length > 0) {
+                toast.info(result.parsedPrompt.suggestions.join(' • '));
+            }
+            return;
+        }
+
+        setVehicles(result.data);
+        setPagination(result.pagination || null);
+        setTotalResults(result.total);
+        setAiParsedInfo(result.parsedPrompt || null);
+
+        // Show what AI understood
+        if (result.parsedPrompt && result.parsedPrompt.extractedFilters) {
+            const filters = Object.entries(result.parsedPrompt.extractedFilters)
+                .map(([key, value]) => `${key}: ${value}`)
+                .join(', ');
+            console.log('AI extracted:', filters);
         }
 
         setVehicles(result.data);
@@ -331,13 +378,40 @@ function SearchContent() {
                             initialPlate={initialPlate}
                             onSearch={handleSearch}
                             onFilterSearch={handleFilterSearch}
+                            onAiSearch={handleAiSearch}
                             isLoading={isLoading}
                         />
                     </div>
                 </div>
 
                 {/* Results Section */}
-                <div className="space-y-3 sm:space-y-4">
+                <div className="space-y-3 sm:space-y-4">{/* AI Parsed Info Banner */}
+                            {aiParsedInfo && (
+                                <div className="bg-gradient-to-r from-violet-50 to-purple-50 dark:from-violet-950/30 dark:to-purple-950/30 border border-violet-200 dark:border-violet-800 rounded-xl p-4">
+                                    <div className="flex items-start gap-3">
+                                        <Sparkles className="w-5 h-5 text-violet-600 dark:text-violet-400 mt-0.5 flex-shrink-0" />
+                                        <div className="flex-1 space-y-2">
+                                            <h3 className="text-sm font-semibold text-violet-900 dark:text-violet-100">
+                                                AI Understood Your Search
+                                            </h3>
+                                            <div className="flex flex-wrap gap-2">
+                                                {Object.entries(aiParsedInfo.extractedFilters || {}).map(([key, value]) => (
+                                                    <span
+                                                        key={key}
+                                                        className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-white/80 dark:bg-slate-800/80 border border-violet-200 dark:border-violet-700 rounded-full text-xs font-medium text-violet-900 dark:text-violet-100"
+                                                    >
+                                                        <span className="text-violet-600 dark:text-violet-400 capitalize">{key}:</span>
+                                                        {value}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                            <p className="text-xs text-violet-700 dark:text-violet-300">
+                                                Confidence: {(aiParsedInfo.confidence * 100).toFixed(0)}%
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
                     {/* Loading State */}
                     {isLoading && (
                         <div className="text-center py-12">

@@ -202,7 +202,16 @@
     "yearTo": "עד שנה",
     "yearFromPlaceholder": "1990",
     "yearToPlaceholder": "2024",
-    "allFiltersTip": "טיפ: הכנס מספר מונחי חיפוש מופרדים ברווחים. השתמש בטווח שנים כמו \"2010-2020\". דוגמה: \"טויוטה קורולה לבן 2015-2020\""
+    "allFiltersTip": "טיפ: הכנס מספר מונחי חיפוש מופרדים ברווחים. השתמש בטווח שנים כמו \"2010-2020\". דוגמה: \"טויוטה קורולה לבן 2015-2020\"",
+    "searchMode": "מצב חיפוש",
+    "traditional": "מסורתי",
+    "aiMode": "חיפוש AI",
+    "aiPromptLabel": "תאר את הרכב שאתה מחפש",
+    "aiPromptPlaceholder": "דוגמה: טויוטה לבנה משנת 2015\nאו באנגלית: White Toyota from 2015\n\nאתה יכול לתאר: יצרן, דגם, צבע, שנה, סוג דלק, בעלות...",
+    "aiPromptHint": "💡 הבינה המלאכותית מבינה עברית ואנגלית. היה ספציפי ככל האפשר לתוצאות טובות יותר.",
+    "aiSearchButton": "חפש עם AI",
+    "enterAiPrompt": "נא לתאר את הרכב שאתה מחפש",
+    "aiNotAvailable": "חיפוש AI אינו זמין"
   },
   "pagination": {
     "previous": "הקודם",

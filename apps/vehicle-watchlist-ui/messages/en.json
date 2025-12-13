@@ -202,7 +202,16 @@
     "yearTo": "Year To",
     "yearFromPlaceholder": "1990",
     "yearToPlaceholder": "2024",
-    "allFiltersTip": "Tip: Enter multiple search terms separated by spaces. Use year range like \"2010-2020\". Example: \"Toyota Corolla White 2015-2020\""
+    "allFiltersTip": "Tip: Enter multiple search terms separated by spaces. Use year range like \"2010-2020\". Example: \"Toyota Corolla White 2015-2020\"",
+    "searchMode": "Search Mode",
+    "traditional": "Traditional",
+    "aiMode": "AI Search",
+    "aiPromptLabel": "Describe the vehicle you're looking for",
+    "aiPromptPlaceholder": "Example: White Toyota from 2015\nOr in Hebrew: טויוטה לבנה משנת 2015\n\nYou can describe: manufacturer, model, color, year, fuel type, ownership...",
+    "aiPromptHint": "💡 AI understands both Hebrew and English. Be as specific as possible for better results.",
+    "aiSearchButton": "Search with AI",
+    "enterAiPrompt": "Please describe the vehicle you're looking for",
+    "aiNotAvailable": "AI search is not available"
   },
   "pagination": {
     "previous": "Previous",
