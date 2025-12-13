@@ -2,7 +2,7 @@ import './global.css';
 import { ThemeProvider } from '@/components/theme-provider';
 import { Navbar } from '@/components/navbar';
 import { Toaster } from 'sonner';
-import { I18nProvider } from '@/lib/i18n-provider';
+import { Providers } from '@/lib/providers';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
@@ -107,7 +107,7 @@ export default function RootLayout({
         />
       </head>
       <body>
-        <I18nProvider>
+        <Providers>
           <ThemeProvider
             attribute="class"
             defaultTheme="system"
@@ -120,7 +120,7 @@ export default function RootLayout({
             </div>
             <Toaster richColors position="top-center" />
           </ThemeProvider>
-        </I18nProvider>
+        </Providers>
       </body>
     </html>
   );

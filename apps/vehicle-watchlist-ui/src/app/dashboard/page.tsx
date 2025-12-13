@@ -126,17 +126,27 @@ export default function DashboardPage() {
                             <CardContent>
                                 <div className='flex flex-row items-center justify-between'>
                                     <div className='flex flex-col items-center'>
-                                        <p className="text-3xl font-bold">{watchlistCount}</p>
+                                        {
+                                            watchlistCount > 0 ? (
+                                                <p className="text-3xl font-bold">{watchlistCount}</p>
+                                            ) : (
+                                                <p className="text-3xl font-bold">0</p>
+                                            )
+                                        }
                                         <p className="text-sm text-muted-foreground mt-1">
                                             {watchlistCount === 0 ? t('dashboard.noVehiclesYet') : t('dashboard.tracked')}
                                         </p>
                                     </div>
                                     <div className='flex flex-col items-center'>
-                                        {starredCount > 0 && (
+                                        {starredCount > 0 ? (
                                             <p className='text-3xl font-bold'>
                                                 {starredCount}
                                             </p>
-                                        )}
+                                        ) :
+                                            <p className='text-3xl font-bold'>
+                                                0
+                                            </p>
+                                        }
                                         <p className="text-sm text-muted-foreground mt-1">
                                             {starredCount === 0 ? t('dashboard.noStarredYet') : t('dashboard.starred')}
                                         </p>

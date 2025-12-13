@@ -10,13 +10,11 @@ export const addToWatchlistSchema = z.object({
     color: z.string().optional(),
     fuelType: z.string().optional(),
     ownership: z.string().optional(),
-    notes: z.string().max(500).optional(),
     isStarred: z.boolean().default(false),
 });
 
 // Schema for updating watchlist item
 export const updateWatchlistSchema = z.object({
-    notes: z.string().max(500).optional(),
     isStarred: z.boolean().optional(),
 });
 
@@ -31,7 +29,6 @@ export const watchlistItemSchema = z.object({
     color: z.string().optional(),
     fuelType: z.string().optional(),
     ownership: z.string().optional(),
-    notes: z.string().optional(),
     isStarred: z.boolean(),
     createdAt: z.string(),
     updatedAt: z.string(),
