@@ -92,9 +92,16 @@ describe('AuthController', () => {
 
             mockAuthService.register.mockResolvedValue(mockAuthResponse);
 
-            const result = await controller.register(registerDto);
+            const mockRes = {
+                cookie: jest.fn().mockReturnThis(),
+                json: jest.fn(),
+            } as any;
 
-            expect(result).toEqual(mockAuthResponse);
+            await controller.register(registerDto, mockRes);
+
+            expect(mockRes.cookie).toHaveBeenCalledWith('access_token', mockAuthResponse.access_token, expect.any(Object));
+            expect(mockRes.cookie).toHaveBeenCalledWith('refresh_token', mockAuthResponse.refresh_token, expect.any(Object));
+            expect(mockRes.json).toHaveBeenCalledWith({ user: mockAuthResponse.user });
             expect(authService.register).toHaveBeenCalledWith(registerDto);
             expect(authService.register).toHaveBeenCalledTimes(1);
         });
@@ -115,9 +122,14 @@ describe('AuthController', () => {
 
             mockAuthService.register.mockResolvedValue(mockAuthResponse);
 
-            const result = await controller.register(registerDto);
+            const mockRes = {
+                cookie: jest.fn().mockReturnThis(),
+                json: jest.fn(),
+            } as any;
 
-            expect(result).toEqual(mockAuthResponse);
+            await controller.register(registerDto, mockRes);
+
+            expect(mockRes.json).toHaveBeenCalledWith({ user: mockAuthResponse.user });
             expect(authService.register).toHaveBeenCalledWith(registerDto);
         });
 
@@ -167,7 +179,12 @@ describe('AuthController', () => {
 
             mockAuthService.register.mockRejectedValue(new Error('Email already exists'));
 
-            await expect(controller.register(registerDto)).rejects.toThrow('Email already exists');
+            const mockRes = {
+                cookie: jest.fn().mockReturnThis(),
+                json: jest.fn(),
+            } as any;
+
+            await expect(controller.register(registerDto, mockRes)).rejects.toThrow('Email already exists');
             expect(authService.register).toHaveBeenCalledWith(registerDto);
         });
     });
@@ -181,9 +198,16 @@ describe('AuthController', () => {
 
             mockAuthService.login.mockResolvedValue(mockAuthResponse);
 
-            const result = await controller.login(loginDto);
+            const mockRes = {
+                cookie: jest.fn().mockReturnThis(),
+                json: jest.fn(),
+            } as any;
 
-            expect(result).toEqual(mockAuthResponse);
+            await controller.login(loginDto, mockRes);
+
+            expect(mockRes.cookie).toHaveBeenCalledWith('access_token', mockAuthResponse.access_token, expect.any(Object));
+            expect(mockRes.cookie).toHaveBeenCalledWith('refresh_token', mockAuthResponse.refresh_token, expect.any(Object));
+            expect(mockRes.json).toHaveBeenCalledWith({ user: mockAuthResponse.user });
             expect(authService.login).toHaveBeenCalledWith(loginDto);
             expect(authService.login).toHaveBeenCalledTimes(1);
         });
@@ -196,7 +220,12 @@ describe('AuthController', () => {
 
             mockAuthService.login.mockRejectedValue(new Error('Invalid credentials'));
 
-            await expect(controller.login(loginDto)).rejects.toThrow('Invalid credentials');
+            const mockRes = {
+                cookie: jest.fn().mockReturnThis(),
+                json: jest.fn(),
+            } as any;
+
+            await expect(controller.login(loginDto, mockRes)).rejects.toThrow('Invalid credentials');
             expect(authService.login).toHaveBeenCalledWith(loginDto);
         });
     });
@@ -246,9 +275,16 @@ describe('AuthController', () => {
 
             mockAuthService.logout.mockResolvedValue(undefined);
 
-            const result = await controller.logout(req);
+            const mockRes = {
+                clearCookie: jest.fn().mockReturnThis(),
+                json: jest.fn(),
+            } as any;
 
-            expect(result).toEqual({ message: 'Logged out successfully' });
+            await controller.logout(req, mockRes);
+
+            expect(mockRes.clearCookie).toHaveBeenCalledWith('access_token');
+            expect(mockRes.clearCookie).toHaveBeenCalledWith('refresh_token');
+            expect(mockRes.json).toHaveBeenCalledWith({ message: 'Logged out successfully' });
             expect(authService.logout).toHaveBeenCalledWith(req.user.id);
             expect(authService.logout).toHaveBeenCalledTimes(1);
         });
@@ -264,7 +300,12 @@ describe('AuthController', () => {
 
             mockAuthService.logout.mockRejectedValue(new Error('Logout failed'));
 
-            await expect(controller.logout(req)).rejects.toThrow('Logout failed');
+            const mockRes = {
+                clearCookie: jest.fn().mockReturnThis(),
+                json: jest.fn(),
+            } as any;
+
+            await expect(controller.logout(req, mockRes)).rejects.toThrow('Logout failed');
             expect(authService.logout).toHaveBeenCalledWith(req.user.id);
         });
     });

@@ -130,16 +130,16 @@ describe('WatchlistService', () => {
 
     describe('updateWatchlistItem', () => {
         it('should update a watchlist item', async () => {
-            const updatedItem = { ...mockWatchlistItem, notes: 'Updated notes' };
+            const updatedItem = { ...mockWatchlistItem, isStarred: true };
             mockModel.findOneAndUpdate.mockReturnValue({
                 exec: jest.fn().mockResolvedValue(updatedItem),
             });
 
             const result = await service.updateWatchlistItem(mockUserId, '8689365', {
-                notes: 'Updated notes',
+                isStarred: true,
             });
 
-            expect(result.notes).toBe('Updated notes');
+            expect(result.isStarred).toBe(true);
         });
 
         it('should throw NotFoundException if item not found', async () => {
@@ -148,7 +148,7 @@ describe('WatchlistService', () => {
             });
 
             await expect(
-                service.updateWatchlistItem(mockUserId, '9999999', { notes: 'test' })
+                service.updateWatchlistItem(mockUserId, '9999999', { isStarred: true })
             ).rejects.toThrow(NotFoundException);
         });
     });

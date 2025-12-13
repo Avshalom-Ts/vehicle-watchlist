@@ -151,17 +151,17 @@ describe('WatchlistController', () => {
 
     describe('updateWatchlistItem', () => {
         it('should update a watchlist item', async () => {
-            const updatedItem = { ...mockWatchlistItem, notes: 'Test notes' };
+            const updatedItem = { ...mockWatchlistItem, isStarred: true };
             watchlistService.updateWatchlistItem.mockResolvedValue(updatedItem as any);
 
             const result = await controller.updateWatchlistItem(
                 mockRequest,
                 '8689365',
-                { notes: 'Test notes' }
+                { isStarred: true }
             );
 
             expect(result.success).toBe(true);
-            expect(result.data.notes).toBe('Test notes');
+            expect(result.data.isStarred).toBe(true);
         });
     });
 
