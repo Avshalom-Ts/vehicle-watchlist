@@ -12,7 +12,7 @@ version: "3.8"
 
 services:
   # MongoDB Database
-  mongodb:
+  mongodb-mv:
     image: mongo:7
     container_name: vehicle-watchlist-mongodb-mv
     restart: always
@@ -35,7 +35,7 @@ services:
       start_period: 10s
 
   # Ollama - Local AI Model for Vehicle Search
-  ollama:
+  ollama-mv:
     image: ollama/ollama:latest
     container_name: vehicle-watchlist-ollama-mv
     restart: always
@@ -53,11 +53,11 @@ services:
       start_period: 30s
 
   # Ollama Model Puller - Downloads llama3.2 on first run
-  ollama-pull:
+  ollama-pull-mv:
     image: curlimages/curl:latest
     container_name: vehicle-watchlist-ollama-pull-mv
     depends_on:
-      ollama:
+      ollama-mv:
         condition: service_healthy
     networks:
       - vehicle-watchlist-network-mv
@@ -68,31 +68,30 @@ services:
         echo "Waiting for Ollama service..."
         sleep 5
         echo "Pulling llama3.2 model..."
-        curl -X POST http://ollama:11434/api/pull -d '{"name":"llama3.2"}'
+        curl -X POST http://ollama-mv:11434/api/pull -d '{"name":"llama3.2"}'
         echo ""
         echo "Model pull initiated successfully!"
     restart: "no"
 
   # NestJS Backend API
-  server:
+  server-mv:
     build:
       context: .
       dockerfile: docker/backend/Dockerfile
-    image: vehicle-watchlist-server:latest
     container_name: vehicle-watchlist-server-mv
     restart: always
     depends_on:
-      mongodb:
+      mongodb-mv:
         condition: service_healthy
-      ollama:
+      ollama-mv:
         condition: service_healthy
     environment:
       - NODE_ENV=production
-      - MONGO_URI=mongodb://${MONGO_ROOT_USER:-admin}:${MONGO_ROOT_PASSWORD:-admin123}@mongodb:27018/vehicle-watchlist?authSource=admin
+      - MONGO_URI=mongodb://${MONGO_ROOT_USER:-admin}:${MONGO_ROOT_PASSWORD:-admin123}@mongodb-mv:27017/vehicle-watchlist?authSource=admin
       - JWT_SECRET=${JWT_SECRET:-jwt-secret-key}
       - JWT_EXPIRES_IN=${JWT_EXPIRES_IN:-7d}
       - RESOURCE_ID=${RESOURCE_ID:-053cea08-09bc-40ec-8f7a-4b9525b57555}
-      - OLLAMA_URL=http://ollama:11434
+      - OLLAMA_URL=http://ollama-mv:11434
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
       - PORT=3000
     ports:
@@ -115,15 +114,14 @@ services:
       start_period: 30s
 
   # Next.js Frontend Client
-  client:
+  client-mv:
     build:
       context: .
       dockerfile: docker/frontend/Dockerfile
-    image: vehicle-watchlist-client:latest
     container_name: vehicle-watchlist-client-mv
     restart: always
     depends_on:
-      - server
+      - server-mv
     environment:
       - NODE_ENV=production
       - PORT=4200

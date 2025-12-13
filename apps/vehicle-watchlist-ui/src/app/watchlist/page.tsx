@@ -153,7 +153,7 @@ export default function WatchlistPage() {
             });
 
             // Add footer with page numbers
-            const pageCount = (doc as { internal: { getNumberOfPages(): number } }).internal.getNumberOfPages();
+            const pageCount = (doc as any).internal.getNumberOfPages();
             doc.setFont('LinBiolinum');
             for (let i = 1; i <= pageCount; i++) {
                 doc.setPage(i);
