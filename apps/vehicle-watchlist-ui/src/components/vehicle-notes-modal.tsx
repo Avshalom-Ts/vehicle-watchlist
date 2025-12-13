@@ -54,15 +54,12 @@ export function VehicleNotesModal({
 
         setLoading(true);
         try {
-            const token = localStorage.getItem('access_token');
             const apiUrl = `${process.env.NEXT_PUBLIC_API_URL}/watchlist/notes/item/${watchlistItemId}`;
             console.log('Fetching notes from:', apiUrl);
             console.log('WatchlistItemId:', watchlistItemId);
 
             const response = await fetch(apiUrl, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
+                credentials: 'include',
             });
 
             console.log('Response status:', response.status);
@@ -91,15 +88,14 @@ export function VehicleNotesModal({
         }
 
         try {
-            const token = localStorage.getItem('access_token');
             const response = await fetch(
                 `${process.env.NEXT_PUBLIC_API_URL}/watchlist/notes`,
                 {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        Authorization: `Bearer ${token}`,
                     },
+                    credentials: 'include',
                     body: JSON.stringify({
                         watchlistItemId,
                         content: newNoteContent,
@@ -126,15 +122,14 @@ export function VehicleNotesModal({
         }
 
         try {
-            const token = localStorage.getItem('access_token');
             const response = await fetch(
                 `${process.env.NEXT_PUBLIC_API_URL}/watchlist/notes/${noteId}`,
                 {
                     method: 'PATCH',
                     headers: {
                         'Content-Type': 'application/json',
-                        Authorization: `Bearer ${token}`,
                     },
+                    credentials: 'include',
                     body: JSON.stringify({
                         content: editContent,
                     }),
@@ -159,14 +154,11 @@ export function VehicleNotesModal({
         }
 
         try {
-            const token = localStorage.getItem('access_token');
             const response = await fetch(
                 `${process.env.NEXT_PUBLIC_API_URL}/watchlist/notes/${noteId}`,
                 {
                     method: 'DELETE',
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
+                    credentials: 'include',
                 }
             );
 

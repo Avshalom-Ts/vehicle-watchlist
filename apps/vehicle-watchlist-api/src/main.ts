@@ -7,18 +7,22 @@ import { Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { ZodValidationPipe } from 'nestjs-zod';
 import { AppModule } from './app/app.module';
+import cookieParser from 'cookie-parser';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const globalPrefix = 'api';
   app.setGlobalPrefix(globalPrefix);
 
+  // Enable cookie parser
+  app.use(cookieParser());
+
   // Enable Zod validation globally
   app.useGlobalPipes(new ZodValidationPipe());
 
-  // Enable CORS for frontend communication
+  // Enable CORS for frontend communication with credentials
   app.enableCors({
-    origin: ['http://localhost:4200', 'http://localhost:80'],
+    origin: ['http://localhost:4200', 'http://localhost:80', 'http://localhost:3000'],
     credentials: true,
   });
 

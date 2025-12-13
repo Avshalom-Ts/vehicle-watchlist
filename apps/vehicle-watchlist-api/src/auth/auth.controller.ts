@@ -1,4 +1,5 @@
-import { Controller, Post, Get, Body, HttpCode, HttpStatus, UsePipes, UseGuards, Request } from '@nestjs/common';
+import { Controller, Post, Get, Body, HttpCode, HttpStatus, UsePipes, UseGuards, Request, Response } from '@nestjs/common';
+import { Response as ExpressResponse } from 'express';
 import { AuthService } from './auth.service';
 import {
     LoginDto,
@@ -29,8 +30,26 @@ export class AuthController {
     @ValidateEmail({ blockDisposable: true })
     @RateLimitPresets.Auth() // 5 requests per 15 minutes
     @UsePipes(new ZodValidationPipe(registerSchema))
-    async register(@Body() registerDto: RegisterDto): Promise<AuthResponse> {
-        return this.authService.register(registerDto);
+    async register(@Body() registerDto: RegisterDto, @Response() res: ExpressResponse) {
+        const result = await this.authService.register(registerDto);
+        
+        // Set HTTP-only cookies
+        res.cookie('access_token', result.access_token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
+            maxAge: 15 * 60 * 1000, // 15 minutes
+        });
+        
+        res.cookie('refresh_token', result.refresh_token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
+            maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+        });
+        
+        // Return only user info, tokens are in cookies
+        return res.json({ user: result.user });
     }
 
     /**
@@ -42,8 +61,26 @@ export class AuthController {
     @RateLimitPresets.Auth() // 5 requests per 15 minutes
     @HttpCode(HttpStatus.OK)
     @UsePipes(new ZodValidationPipe(loginSchema))
-    async login(@Body() loginDto: LoginDto): Promise<AuthResponse> {
-        return this.authService.login(loginDto);
+    async login(@Body() loginDto: LoginDto, @Response() res: ExpressResponse) {
+        const result = await this.authService.login(loginDto);
+        
+        // Set HTTP-only cookies
+        res.cookie('access_token', result.access_token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
+            maxAge: 15 * 60 * 1000, // 15 minutes
+        });
+        
+        res.cookie('refresh_token', result.refresh_token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
+            maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+        });
+        
+        // Return only user info, tokens are in cookies
+        return res.json({ user: result.user });
     }
 
     /**
@@ -65,9 +102,14 @@ export class AuthController {
     @Post('logout')
     @HttpCode(HttpStatus.OK)
     @UseGuards(JwtAuthGuard)
-    async logout(@Request() req: { user: { id: string; email: string; name: string } }): Promise<{ message: string }> {
+    async logout(@Request() req: { user: { id: string; email: string; name: string } }, @Response() res: ExpressResponse) {
         await this.authService.logout(req.user.id);
-        return { message: 'Logged out successfully' };
+        
+        // Clear cookies
+        res.clearCookie('access_token');
+        res.clearCookie('refresh_token');
+        
+        return res.json({ message: 'Logged out successfully' });
     }
 
     /**
