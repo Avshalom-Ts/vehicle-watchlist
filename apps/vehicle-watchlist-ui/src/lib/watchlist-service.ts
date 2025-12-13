@@ -1,4 +1,3 @@
-import { AuthService } from './auth-service';
 import type { WatchlistItem, AddToWatchlistInput, UpdateWatchlistInput } from '@vehicle-watchlist/utils';
 
 // Use relative URL so it works on any domain (localhost, CodeSandbox, production)

@@ -1,4 +1,4 @@
-import type { RegisterDto, LoginDto, AuthResponse } from '@vehicle-watchlist/utils';
+import type { RegisterDto, LoginDto } from '@vehicle-watchlist/utils';
 
 // Use relative URL so it works on any domain (localhost, CodeSandbox, production)
 const API_URL = process.env.NEXT_PUBLIC_API_URL || '/api';

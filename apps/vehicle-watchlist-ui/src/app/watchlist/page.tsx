@@ -153,7 +153,7 @@ export default function WatchlistPage() {
             });
 
             // Add footer with page numbers
-            const pageCount = (doc as any).internal.getNumberOfPages();
+            const pageCount = (doc as { internal: { getNumberOfPages(): number } }).internal.getNumberOfPages();
             doc.setFont('LinBiolinum');
             for (let i = 1; i <= pageCount; i++) {
                 doc.setPage(i);
@@ -301,7 +301,7 @@ export default function WatchlistPage() {
                                             {t('watchlist.added')} {new Date(item.createdAt).toLocaleDateString('he-IL')}
                                         </p>
                                         <div className="flex items-center gap-2">
-                                            {((item as any)._id || item.id) && (
+                                            {((item as WatchlistItem & { _id?: string })._id || item.id) && (
                                                 <Button
                                                     variant="ghost"
                                                     size="sm"
@@ -346,7 +346,7 @@ export default function WatchlistPage() {
                     <VehicleNotesModal
                         open={notesModalOpen}
                         onOpenChange={setNotesModalOpen}
-                        watchlistItemId={(selectedItem as any)._id || selectedItem.id}
+                        watchlistItemId={(selectedItem as WatchlistItem & { _id?: string })._id || selectedItem.id}
                         vehicleName={`${selectedItem.manufacturer} ${selectedItem.commercialName || selectedItem.model} (${selectedItem.licensePlate})`}
                     />
                 )}

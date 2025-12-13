@@ -1,5 +1,3 @@
-import { AuthService } from './auth-service';
-
 // Use relative URL so it works on any domain (localhost, CodeSandbox, production)
 const API_URL = process.env.NEXT_PUBLIC_API_URL || '/api';
 

@@ -17,7 +17,7 @@ const LOCALE_STORAGE_KEY = 'preferred-locale';
 
 export function I18nProvider({ children }: { children: React.ReactNode }) {
     const [locale, setLocaleState] = useState<Locale>('he'); // Hebrew as default
-    const [messages, setMessages] = useState<Record<string, any>>({});
+    const [messages, setMessages] = useState<Record<string, unknown>>({});
     const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
@@ -49,7 +49,7 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
 
     const t = (key: string): string => {
         const keys = key.split('.');
-        let value: any = messages;
+        let value: unknown = messages;
 
         for (const k of keys) {
             if (value && typeof value === 'object') {
