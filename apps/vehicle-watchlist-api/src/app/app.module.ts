@@ -15,7 +15,7 @@ import { AiSearchModule } from '../ai-search/ai-search.module';
     RateLimitModule.register({
       options: {
         windowSec: 60, // 1 minute
-        max: process.env.NODE_ENV === 'production' ? 5 : 1000, // Higher limit for e2e tests
+        max: process.env.NODE_ENV === 'production' ? 100 : 1000, // Higher limit for e2e tests
         message: 'Too many requests, please try again later.',
       },
     }),
