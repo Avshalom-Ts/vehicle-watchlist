@@ -6,15 +6,26 @@ const { composePlugins, withNx } = require('@nx/next');
  * @type {import('@nx/next/plugins/with-nx').WithNxOptions}
  **/
 const nextConfig = {
-  // Use this to set Nx-specific options
-  // See: https://nx.dev/recipes/next/next-config-setup
   nx: {},
-  // Use static export for simple nginx deployment
-  output: 'export',
-  // Disable image optimization for static export
-  images: {
-    unoptimized: true,
-  },
+  // static export only for production builds
+  ...(process.env.NODE_ENV === 'production'
+    ? {
+        output: 'export',
+        images: {
+          unoptimized: true,
+        },
+      }
+    : {
+        // API rewrites for development
+        async rewrites() {
+          return [
+            {
+              source: '/api/:path*',
+              destination: 'http://localhost:3000/api/:path*',
+            },
+          ];
+        },
+      }),
 };
 
 const plugins = [
