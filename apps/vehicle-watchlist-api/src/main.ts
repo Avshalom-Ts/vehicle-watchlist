@@ -17,8 +17,12 @@ async function bootstrap() {
   app.useGlobalPipes(new ZodValidationPipe());
 
   // Enable CORS for frontend communication
+  // Allow all origins in development/CodeSandbox, specific origins in production
+  const isProduction = process.env.NODE_ENV === 'production';
   app.enableCors({
-    origin: ['http://localhost:4200', 'http://localhost:80'],
+    origin: isProduction
+      ? ['http://localhost:4200', 'http://localhost:80']
+      : true, // Allow all origins in development
     credentials: true,
   });
 
