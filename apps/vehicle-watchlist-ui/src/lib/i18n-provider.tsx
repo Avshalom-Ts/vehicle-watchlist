@@ -49,11 +49,11 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
 
     const t = (key: string): string => {
         const keys = key.split('.');
-        let value: Record<string, unknown> | string = messages;
+        let value: Record<string, unknown> = messages;
 
         for (const k of keys) {
             if (value && typeof value === 'object') {
-                value = value[k];
+                value = value[k] as Record<string, unknown>;
             } else {
                 return key; // Return key if translation not found
             }
