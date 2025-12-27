@@ -86,7 +86,8 @@ function AllProviders({ children }: AllProvidersProps) {
 
     const contextValue: I18nContextType = {
         locale: 'en',
-        setLocale: () => {},
+        // eslint-disable-next-line @typescript-eslint/no-empty-function
+        setLocale: () => { },
         t,
         dir: 'ltr',
     };

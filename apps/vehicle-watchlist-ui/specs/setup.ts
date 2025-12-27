@@ -124,7 +124,8 @@ jest.mock('../src/lib/i18n-provider', () => {
         I18nProvider: ({ children }) => {
             const contextValue = {
                 locale: 'en',
-                setLocale: () => {},
+                // eslint-disable-next-line @typescript-eslint/no-empty-function
+                setLocale: () => { },
                 t,
                 dir: 'ltr',
             };
@@ -135,7 +136,8 @@ jest.mock('../src/lib/i18n-provider', () => {
             if (!context) {
                 return {
                     locale: 'en',
-                    setLocale: () => {},
+                    // eslint-disable-next-line @typescript-eslint/no-empty-function
+                    setLocale: () => { },
                     t,
                     dir: 'ltr',
                 };

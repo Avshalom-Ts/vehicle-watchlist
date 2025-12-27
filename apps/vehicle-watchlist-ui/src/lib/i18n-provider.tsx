@@ -49,7 +49,7 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
 
     const t = (key: string): string => {
         const keys = key.split('.');
-        let value: any = messages;
+        let value: Record<string, unknown> | string = messages;
 
         for (const k of keys) {
             if (value && typeof value === 'object') {

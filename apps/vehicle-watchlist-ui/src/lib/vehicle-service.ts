@@ -79,7 +79,7 @@ export interface AiSearchResult extends VehicleSearchResult {
     parsedPrompt?: {
         confidence: number;
         extractedFilters: VehicleFilters;
-        extractedEntities?: any[];
+        extractedEntities?: unknown[];
         suggestions?: string[];
     };
 }
