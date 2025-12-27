@@ -42,7 +42,7 @@ services:
     ports:
       - "11434:11434"
     volumes:
-      - ollama_data_mv:/root/.ollama
+      - ollama_data_vw:/root/.ollama
     networks:
       - vehicle-watchlist-network-vw
     healthcheck:
@@ -146,9 +146,9 @@ networks:
     driver: bridge
 
 volumes:
-  mongodb_data_mv:
+  mongodb_data_vw:
     driver: local
-  mongodb_config_mv:
+  mongodb_config_vw:
     driver: local
-  ollama_data_mv:
+  ollama_data_vw:
     driver: local
