@@ -34,10 +34,6 @@ export class WatchlistItem {
     @Prop()
     ownership?: string;
 
-    // User's custom notes
-    @Prop()
-    notes?: string;
-
     // Star/favorite flag
     @Prop({ default: false })
     isStarred!: boolean;

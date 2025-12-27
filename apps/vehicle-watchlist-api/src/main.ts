@@ -7,11 +7,15 @@ import { Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { ZodValidationPipe } from 'nestjs-zod';
 import { AppModule } from './app/app.module';
+import cookieParser from 'cookie-parser';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const globalPrefix = 'api';
   app.setGlobalPrefix(globalPrefix);
+
+  // Enable cookie parser
+  app.use(cookieParser());
 
   // Enable Zod validation globally
   app.useGlobalPipes(new ZodValidationPipe());

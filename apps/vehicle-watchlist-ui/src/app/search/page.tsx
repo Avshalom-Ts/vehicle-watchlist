@@ -10,15 +10,17 @@ import { SearchForm } from '@/components/search-form';
 import { VehicleCard } from '@/components/vehicle-card';
 import { VehicleDetailsModal } from '@/components/vehicle-details-modal';
 import { Pagination, PaginationInfo } from '@/components/ui/pagination';
-import { VehicleService, Vehicle, VehicleFilters, PaginationInfo as PaginationData } from '@/lib/vehicle-service';
+import { VehicleService, Vehicle, VehicleFilters, PaginationInfo as PaginationData, AiSearchResult } from '@/lib/vehicle-service';
 import { WatchlistService } from '@/lib/watchlist-service';
 import { AuthService } from '@/lib/auth-service';
 import { toast } from 'sonner';
-import { ArrowLeft, AlertCircle, SearchX, Car } from 'lucide-react';
+import { ArrowLeft, AlertCircle, SearchX, Car, Sparkles } from 'lucide-react';
+import { useI18n } from '@/lib/i18n-provider';
 
 const DEFAULT_PAGE_SIZE = 25;
 
 function SearchContent() {
+    const { t } = useI18n();
     const router = useRouter();
     const searchParams = useSearchParams();
     const initialPlate = searchParams.get('plate') || '';
@@ -40,6 +42,8 @@ function SearchContent() {
     const [totalResults, setTotalResults] = useState(0);
     const [, setCurrentSearchPlate] = useState(initialPlate);
     const [currentFilters, setCurrentFilters] = useState<VehicleFilters | null>(null);
+    const [currentAiPrompt, setCurrentAiPrompt] = useState<string | null>(null);
+    const [aiParsedInfo, setAiParsedInfo] = useState<AiSearchResult['parsedPrompt'] | null>(null);
 
     // Vehicle details modal state
     const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
@@ -155,20 +159,20 @@ function SearchContent() {
 
     const handlePageChange = (page: number) => {
         console.log('handlePageChange called with page:', page, 'currentFilters:', currentFilters);
-        if (currentFilters) {
+        if (currentAiPrompt) {
+            handleAiSearch(currentAiPrompt, page);
+        } else if (currentFilters) {
             handleFilterSearch(currentFilters, page);
-            // Scroll to top of results
-            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
+        // Scroll to top of results
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
     const handleFilterSearch = async (filters: VehicleFilters, page = 1) => {
         setIsLoading(true);
         setError(null);
-        setHasSearched(true);
-        setCurrentPage(page);
-        setCurrentFilters(filters);
-        setCurrentSearchPlate(''); // Clear plate search state when doing filter search
+        setCurrentAiPrompt(null); // Clear AI prompt state
+        setAiParsedInfo(null);
 
         const result = await VehicleService.searchWithFilters({ ...filters, page, limit: DEFAULT_PAGE_SIZE });
 
@@ -180,6 +184,51 @@ function SearchContent() {
             setPagination(null);
             setTotalResults(0);
             return;
+        }
+
+        setVehicles(result.data);
+        setPagination(result.pagination || null);
+        setTotalResults(result.total);
+    };
+
+    const handleAiSearch = async (prompt: string, page = 1) => {
+        setIsLoading(true);
+        setError(null);
+        setHasSearched(true);
+        setCurrentPage(page);
+        setCurrentAiPrompt(prompt);
+        setCurrentSearchPlate(''); // Clear plate search state
+        setCurrentFilters(null); // Clear filter search state
+
+        const result = await VehicleService.searchWithAI(prompt, { page, limit: DEFAULT_PAGE_SIZE });
+
+        setIsLoading(false);
+
+        if (!result.success) {
+            setError(result.error || 'AI search failed');
+            setVehicles([]);
+            setPagination(null);
+            setTotalResults(0);
+            setAiParsedInfo(result.parsedPrompt || null);
+            
+            // Show AI suggestions if available
+            if (result.parsedPrompt?.suggestions && result.parsedPrompt.suggestions.length > 0) {
+                toast.info(result.parsedPrompt.suggestions.join(' • '));
+            }
+            return;
+        }
+
+        setVehicles(result.data);
+        setPagination(result.pagination || null);
+        setTotalResults(result.total);
+        setAiParsedInfo(result.parsedPrompt || null);
+
+        // Show what AI understood
+        if (result.parsedPrompt && result.parsedPrompt.extractedFilters) {
+            const filters = Object.entries(result.parsedPrompt.extractedFilters)
+                .map(([key, value]) => `${key}: ${value}`)
+                .join(', ');
+            console.log('AI extracted:', filters);
         }
 
         setVehicles(result.data);
@@ -209,7 +258,7 @@ function SearchContent() {
                 ownership: vehicle.ownership,
                 isStarred: false,
             });
-            toast.success('Vehicle added to watchlist');
+            toast.success(t('search.addedToWatchlist'));
         } catch (error) {
             // Revert optimistic update on error
             setWatchlistPlates(prev => {
@@ -217,7 +266,7 @@ function SearchContent() {
                 newSet.delete(vehicle.licensePlate);
                 return newSet;
             });
-            toast.error(error instanceof Error ? error.message : 'Failed to add to watchlist');
+            toast.error(error instanceof Error ? error.message : t('search.failedToAddToWatchlist'));
         }
     };
 
@@ -263,7 +312,7 @@ function SearchContent() {
                 });
                 setWatchlistPlates(prev => new Set([...prev, vehicle.licensePlate]));
             }
-            toast.success(isCurrentlyStarred ? 'Removed from starred' : 'Added to starred');
+            toast.success(isCurrentlyStarred ? t('search.removedFromStarred') : t('search.addedToStarred'));
         } catch (error) {
             // Revert optimistic update on error
             setStarredPlates(prev => {
@@ -275,7 +324,7 @@ function SearchContent() {
                 }
                 return newSet;
             });
-            toast.error(error instanceof Error ? error.message : 'Failed to update star status');
+            toast.error(error instanceof Error ? error.message : t('search.failedToUpdateStar'));
         }
     };
 
@@ -287,7 +336,7 @@ function SearchContent() {
                     <Button variant="ghost" size="sm" asChild>
                         <Link href="/">
                             <ArrowLeft className="w-4 h-4 mr-2" />
-                            Back to Home
+                            {t('search.backToHome')}
                         </Link>
                     </Button>
                 </div>
@@ -299,9 +348,9 @@ function SearchContent() {
                             <Car className="w-8 h-8 sm:w-10 sm:h-10 text-primary" />
                         </div>
                     </div>
-                    <h1 className="text-xl sm:text-2xl md:text-3xl font-bold mb-2">Vehicle Search</h1>
+                    <h1 className="text-xl sm:text-2xl md:text-3xl font-bold mb-2">{t('search.vehicleSearch')}</h1>
                     <p className="text-xs sm:text-sm md:text-base text-muted-foreground px-2 sm:px-4">
-                        Search by license plate or use filters to find vehicles
+                        {t('search.searchDescription')}
                     </p>
                 </div>
 
@@ -329,19 +378,46 @@ function SearchContent() {
                             initialPlate={initialPlate}
                             onSearch={handleSearch}
                             onFilterSearch={handleFilterSearch}
+                            onAiSearch={handleAiSearch}
                             isLoading={isLoading}
                         />
                     </div>
                 </div>
 
                 {/* Results Section */}
-                <div className="space-y-3 sm:space-y-4">
+                <div className="space-y-3 sm:space-y-4">{/* AI Parsed Info Banner */}
+                            {aiParsedInfo && (
+                                <div className="bg-gradient-to-r from-violet-50 to-purple-50 dark:from-violet-950/30 dark:to-purple-950/30 border border-violet-200 dark:border-violet-800 rounded-xl p-4">
+                                    <div className="flex items-start gap-3">
+                                        <Sparkles className="w-5 h-5 text-violet-600 dark:text-violet-400 mt-0.5 flex-shrink-0" />
+                                        <div className="flex-1 space-y-2">
+                                            <h3 className="text-sm font-semibold text-violet-900 dark:text-violet-100">
+                                                AI Understood Your Search
+                                            </h3>
+                                            <div className="flex flex-wrap gap-2">
+                                                {Object.entries(aiParsedInfo.extractedFilters || {}).map(([key, value]) => (
+                                                    <span
+                                                        key={key}
+                                                        className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-white/80 dark:bg-slate-800/80 border border-violet-200 dark:border-violet-700 rounded-full text-xs font-medium text-violet-900 dark:text-violet-100"
+                                                    >
+                                                        <span className="text-violet-600 dark:text-violet-400 capitalize">{key}:</span>
+                                                        {value}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                            <p className="text-xs text-violet-700 dark:text-violet-300">
+                                                Confidence: {(aiParsedInfo.confidence * 100).toFixed(0)}%
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
                     {/* Loading State */}
                     {isLoading && (
                         <div className="text-center py-12">
                             <div className="inline-flex items-center gap-2 text-muted-foreground">
                                 <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                                Searching...
+                                {t('search.searching')}
                             </div>
                         </div>
                     )}
@@ -351,7 +427,7 @@ function SearchContent() {
                         <div className="bg-destructive/10 border border-destructive/20 rounded-xl p-6 text-center">
                             <AlertCircle className="w-12 h-12 text-destructive mx-auto mb-4" />
                             <h3 className="text-lg font-semibold text-destructive mb-2">
-                                Search Error
+                                {t('search.searchError')}
                             </h3>
                             <p className="text-muted-foreground">{error}</p>
                         </div>
@@ -361,11 +437,9 @@ function SearchContent() {
                     {!isLoading && !error && hasSearched && vehicles.length === 0 && (
                         <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-xl p-8 text-center">
                             <SearchX className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-                            <h3 className="text-xl font-semibold mb-2">No Vehicle Found</h3>
+                            <h3 className="text-xl font-semibold mb-2">{t('search.noVehicleFound')}</h3>
                             <p className="text-muted-foreground">
-                                No vehicle was found with this license plate number.
-                                <br />
-                                Please check the number and try again.
+                                {t('search.noVehicleFoundDescription')}
                             </p>
                         </div>
                     )}
@@ -376,7 +450,7 @@ function SearchContent() {
                             <div className="flex items-center justify-between flex-wrap gap-2">
                                 <div>
                                     <h2 className="text-base sm:text-lg font-semibold">
-                                        Search Results
+                                        {t('search.searchResults')}
                                     </h2>
                                     {pagination && (
                                         <PaginationInfo
@@ -391,9 +465,9 @@ function SearchContent() {
                                 {!isAuthenticated && (
                                     <p className="text-xs sm:text-sm text-muted-foreground w-full sm:w-auto text-center sm:text-left">
                                         <Link href="/login" className="text-primary hover:underline">
-                                            Sign in
+                                            {t('search.signIn')}
                                         </Link>{' '}
-                                        to save vehicles to your watchlist
+                                        {t('search.signInToSave')}
                                     </p>
                                 )}
                             </div>

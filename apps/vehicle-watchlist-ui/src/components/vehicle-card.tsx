@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 
 import { Vehicle } from '@/lib/vehicle-service';
 import {
@@ -11,7 +11,8 @@ import {
     CardTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Star, Calendar, Fuel, Palette, User, Car, ExternalLink } from 'lucide-react';
+import { Star, Calendar, Fuel, Palette, User, Car, ExternalLink, FileText } from 'lucide-react';
+import { VehicleNotesModal } from './vehicle-notes-modal';
 
 interface VehicleCardProps {
     vehicle: Vehicle;
@@ -21,6 +22,7 @@ interface VehicleCardProps {
     showActions?: boolean;
     isInWatchlist?: boolean;
     isStarred?: boolean;
+    watchlistItemId?: string;
 }
 
 export function VehicleCard({
@@ -30,7 +32,10 @@ export function VehicleCard({
     onClick,
     isInWatchlist = false,
     isStarred = false,
+    watchlistItemId,
 }: VehicleCardProps) {
+    const [notesModalOpen, setNotesModalOpen] = useState(false);
+
     const handleCardClick = (e: React.MouseEvent) => {
         // Don't trigger card click when clicking on buttons
         if ((e.target as HTMLElement).closest('button')) {
@@ -127,9 +132,28 @@ export function VehicleCard({
                                 />
                             </Button>
                         )}
+                        {isInWatchlist && watchlistItemId && (
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setNotesModalOpen(true)}
+                                title="View notes"
+                            >
+                                <FileText className="w-4 h-4" />
+                            </Button>
+                        )}
                     </div>
                 </div>
             </CardContent>
+
+            {isInWatchlist && watchlistItemId && (
+                <VehicleNotesModal
+                    open={notesModalOpen}
+                    onOpenChange={setNotesModalOpen}
+                    watchlistItemId={watchlistItemId}
+                    vehicleName={`${vehicle.manufacturer} ${vehicle.commercialName || vehicle.model} (${vehicle.licensePlate})`}
+                />
+            )}
         </Card>
     );
 }

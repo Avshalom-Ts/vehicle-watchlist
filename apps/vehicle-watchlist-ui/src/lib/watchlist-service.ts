@@ -1,4 +1,3 @@
-import { AuthService } from './auth-service';
 import type { WatchlistItem, AddToWatchlistInput, UpdateWatchlistInput } from '@vehicle-watchlist/utils';
 
 // Use relative URL so it works on any domain (localhost, CodeSandbox, production)
@@ -15,10 +14,9 @@ export type { WatchlistItem, AddToWatchlistInput, UpdateWatchlistInput };
 
 export class WatchlistService {
     private static getAuthHeaders(): HeadersInit {
-        const token = AuthService.getAccessToken();
+        // Tokens are now in HTTP-only cookies, no need for Authorization header
         return {
             'Content-Type': 'application/json',
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
         };
     }
 
@@ -51,6 +49,7 @@ export class WatchlistService {
         const response = await fetch(url, {
             method: 'GET',
             headers: this.getAuthHeaders(),
+            credentials: 'include',
         });
 
         return this.handleResponse<WatchlistResponse>(response);
@@ -63,6 +62,7 @@ export class WatchlistService {
         const response = await fetch(`${API_URL}/watchlist`, {
             method: 'POST',
             headers: this.getAuthHeaders(),
+            credentials: 'include',
             body: JSON.stringify(dto),
         });
 
@@ -76,6 +76,7 @@ export class WatchlistService {
         const response = await fetch(`${API_URL}/watchlist/${encodeURIComponent(licensePlate)}`, {
             method: 'GET',
             headers: this.getAuthHeaders(),
+            credentials: 'include',
         });
 
         return this.handleResponse(response);
@@ -91,6 +92,7 @@ export class WatchlistService {
         const response = await fetch(`${API_URL}/watchlist/${encodeURIComponent(licensePlate)}`, {
             method: 'PATCH',
             headers: this.getAuthHeaders(),
+            credentials: 'include',
             body: JSON.stringify(dto),
         });
 
@@ -104,6 +106,7 @@ export class WatchlistService {
         const response = await fetch(`${API_URL}/watchlist/${encodeURIComponent(licensePlate)}`, {
             method: 'DELETE',
             headers: this.getAuthHeaders(),
+            credentials: 'include',
         });
 
         return this.handleResponse(response);

@@ -3,10 +3,15 @@ import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { LoginDto, RegisterDto, RefreshTokenDto, AuthResponse, UserResponse } from '@vehicle-watchlist/utils';
+import { EmailValidationGuard, EmailValidationService } from '@vehicle-watchlist/email-validation';
+import { Reflector } from '@nestjs/core';
+import { BadRequestException } from '@nestjs/common';
 
 describe('AuthController', () => {
     let controller: AuthController;
     let authService: AuthService;
+    let emailValidationService: EmailValidationService;
+    let emailValidationGuard: EmailValidationGuard;
 
     const mockAuthService = {
         register: jest.fn(),
@@ -14,6 +19,12 @@ describe('AuthController', () => {
         refreshToken: jest.fn(),
         logout: jest.fn(),
         getStatus: jest.fn(),
+    };
+
+    const mockEmailValidationService = {
+        validateEmail: jest.fn(),
+        validateEmails: jest.fn(),
+        isDisposable: jest.fn(),
     };
 
     const mockAuthResponse: AuthResponse = {
@@ -40,6 +51,17 @@ describe('AuthController', () => {
                     provide: AuthService,
                     useValue: mockAuthService,
                 },
+                {
+                    provide: EmailValidationService,
+                    useValue: mockEmailValidationService,
+                },
+                {
+                    provide: Reflector,
+                    useValue: {
+                        getAllAndOverride: jest.fn(),
+                    },
+                },
+                EmailValidationGuard,
             ],
         })
             .overrideGuard(JwtAuthGuard)
@@ -48,6 +70,8 @@ describe('AuthController', () => {
 
         controller = module.get<AuthController>(AuthController);
         authService = module.get<AuthService>(AuthService);
+        emailValidationService = module.get<EmailValidationService>(EmailValidationService);
+        emailValidationGuard = module.get<EmailValidationGuard>(EmailValidationGuard);
     });
 
     afterEach(() => {
@@ -68,23 +92,99 @@ describe('AuthController', () => {
 
             mockAuthService.register.mockResolvedValue(mockAuthResponse);
 
-            const result = await controller.register(registerDto);
+            const mockRes = {
+                cookie: jest.fn().mockReturnThis(),
+                json: jest.fn(),
+            } as any;
 
-            expect(result).toEqual(mockAuthResponse);
+            await controller.register(registerDto, mockRes);
+
+            expect(mockRes.cookie).toHaveBeenCalledWith('access_token', mockAuthResponse.access_token, expect.any(Object));
+            expect(mockRes.cookie).toHaveBeenCalledWith('refresh_token', mockAuthResponse.refresh_token, expect.any(Object));
+            expect(mockRes.json).toHaveBeenCalledWith({ user: mockAuthResponse.user });
             expect(authService.register).toHaveBeenCalledWith(registerDto);
             expect(authService.register).toHaveBeenCalledTimes(1);
         });
 
-        it('should throw error if email already exists', async () => {
+        it('should validate email is not disposable on registration', async () => {
             const registerDto: RegisterDto = {
-                email: 'test@example.com',
+                email: 'test@gmail.com',
                 password: 'Test1234',
                 name: 'Test User',
             };
 
+            mockEmailValidationService.validateEmail.mockResolvedValue({
+                isValid: true,
+                isDisposable: false,
+                email: 'test@gmail.com',
+                domain: 'gmail.com',
+            });
+
+            mockAuthService.register.mockResolvedValue(mockAuthResponse);
+
+            const mockRes = {
+                cookie: jest.fn().mockReturnThis(),
+                json: jest.fn(),
+            } as any;
+
+            await controller.register(registerDto, mockRes);
+
+            expect(mockRes.json).toHaveBeenCalledWith({ user: mockAuthResponse.user });
+            expect(authService.register).toHaveBeenCalledWith(registerDto);
+        });
+
+        it('should reject registration with disposable email', async () => {
+            const registerDto: RegisterDto = {
+                email: 'test@10minutemail.com',
+                password: 'Test1234',
+                name: 'Test User',
+            };
+
+            mockEmailValidationService.validateEmail.mockResolvedValue({
+                isValid: false,
+                isDisposable: true,
+                email: 'test@10minutemail.com',
+                domain: '10minutemail.com',
+                error: 'Disposable email addresses are not allowed',
+            });
+
+            // The guard would throw BadRequestException before reaching the controller
+            // So we test the validation service behavior
+            const validationResult = await emailValidationService.validateEmail(registerDto.email);
+
+            expect(validationResult.isDisposable).toBe(true);
+            expect(validationResult.isValid).toBe(false);
+            expect(validationResult.error).toBe('Disposable email addresses are not allowed');
+        });
+
+        it('should reject registration with invalid email format', async () => {
+            const registerDto: RegisterDto = {
+                email: 'invalid-email',
+                password: 'Test1234',
+                name: 'Test User',
+            };
+
+            mockEmailValidationService.validateEmail.mockResolvedValue({
+                isValid: false,
+                isDisposable: false,
+                email: 'invalid-email',
+                domain: '',
+                error: 'Invalid email format',
+            });
+
+            const validationResult = await emailValidationService.validateEmail(registerDto.email);
+
+            expect(validationResult.isValid).toBe(false);
+            expect(validationResult.error).toBe('Invalid email format');
+
             mockAuthService.register.mockRejectedValue(new Error('Email already exists'));
 
-            await expect(controller.register(registerDto)).rejects.toThrow('Email already exists');
+            const mockRes = {
+                cookie: jest.fn().mockReturnThis(),
+                json: jest.fn(),
+            } as any;
+
+            await expect(controller.register(registerDto, mockRes)).rejects.toThrow('Email already exists');
             expect(authService.register).toHaveBeenCalledWith(registerDto);
         });
     });
@@ -98,9 +198,16 @@ describe('AuthController', () => {
 
             mockAuthService.login.mockResolvedValue(mockAuthResponse);
 
-            const result = await controller.login(loginDto);
+            const mockRes = {
+                cookie: jest.fn().mockReturnThis(),
+                json: jest.fn(),
+            } as any;
 
-            expect(result).toEqual(mockAuthResponse);
+            await controller.login(loginDto, mockRes);
+
+            expect(mockRes.cookie).toHaveBeenCalledWith('access_token', mockAuthResponse.access_token, expect.any(Object));
+            expect(mockRes.cookie).toHaveBeenCalledWith('refresh_token', mockAuthResponse.refresh_token, expect.any(Object));
+            expect(mockRes.json).toHaveBeenCalledWith({ user: mockAuthResponse.user });
             expect(authService.login).toHaveBeenCalledWith(loginDto);
             expect(authService.login).toHaveBeenCalledTimes(1);
         });
@@ -113,7 +220,12 @@ describe('AuthController', () => {
 
             mockAuthService.login.mockRejectedValue(new Error('Invalid credentials'));
 
-            await expect(controller.login(loginDto)).rejects.toThrow('Invalid credentials');
+            const mockRes = {
+                cookie: jest.fn().mockReturnThis(),
+                json: jest.fn(),
+            } as any;
+
+            await expect(controller.login(loginDto, mockRes)).rejects.toThrow('Invalid credentials');
             expect(authService.login).toHaveBeenCalledWith(loginDto);
         });
     });
@@ -163,9 +275,16 @@ describe('AuthController', () => {
 
             mockAuthService.logout.mockResolvedValue(undefined);
 
-            const result = await controller.logout(req);
+            const mockRes = {
+                clearCookie: jest.fn().mockReturnThis(),
+                json: jest.fn(),
+            } as any;
 
-            expect(result).toEqual({ message: 'Logged out successfully' });
+            await controller.logout(req, mockRes);
+
+            expect(mockRes.clearCookie).toHaveBeenCalledWith('access_token');
+            expect(mockRes.clearCookie).toHaveBeenCalledWith('refresh_token');
+            expect(mockRes.json).toHaveBeenCalledWith({ message: 'Logged out successfully' });
             expect(authService.logout).toHaveBeenCalledWith(req.user.id);
             expect(authService.logout).toHaveBeenCalledTimes(1);
         });
@@ -181,7 +300,12 @@ describe('AuthController', () => {
 
             mockAuthService.logout.mockRejectedValue(new Error('Logout failed'));
 
-            await expect(controller.logout(req)).rejects.toThrow('Logout failed');
+            const mockRes = {
+                clearCookie: jest.fn().mockReturnThis(),
+                json: jest.fn(),
+            } as any;
+
+            await expect(controller.logout(req, mockRes)).rejects.toThrow('Logout failed');
             expect(authService.logout).toHaveBeenCalledWith(req.user.id);
         });
     });

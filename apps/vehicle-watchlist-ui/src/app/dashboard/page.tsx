@@ -10,6 +10,7 @@ import { AnalyticsService } from '@/lib/analytics-service';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Car, Clock, TrendingUp } from 'lucide-react';
+import { useI18n } from '@/lib/i18n-provider';
 
 interface RecentActivity {
     licensePlate: string;
@@ -20,6 +21,7 @@ interface RecentActivity {
 
 export default function DashboardPage() {
     const router = useRouter();
+    const { t, locale } = useI18n();
     const [user, setUser] = useState<{ id: string; email: string; name: string } | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [watchlistCount, setWatchlistCount] = useState(0);
@@ -70,8 +72,8 @@ export default function DashboardPage() {
                 {/* Welcome Section */}
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-3xl md:text-4xl font-bold">Welcome back, {user?.name}!</h1>
-                        <p className="text-muted-foreground mt-1">Manage your vehicle watchlist</p>
+                        <h1 className="text-3xl md:text-4xl font-bold">{t('dashboard.welcome')} {user?.name}!</h1>
+                        <p className="text-muted-foreground mt-1">{t('dashboard.subtitle')}</p>
                     </div>
                 </div>
 
@@ -80,17 +82,17 @@ export default function DashboardPage() {
                     <Card className='col-span-2'>
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2">
-                                Profile Information
+                                {t('dashboard.profileInfo')}
                             </CardTitle>
-                            <CardDescription>Your account details</CardDescription>
+                            <CardDescription>{t('dashboard.accountDetails')}</CardDescription>
                         </CardHeader>
                         <CardContent className="flex gap-8">
                             <div>
-                                <p className="text-sm font-medium text-muted-foreground">Name</p>
+                                <p className="text-sm font-medium text-muted-foreground">{t('auth.name')}</p>
                                 <p className="text-lg">{user?.name}</p>
                             </div>
                             <div>
-                                <p className="text-sm font-medium text-muted-foreground">Email</p>
+                                <p className="text-sm font-medium text-muted-foreground">{t('auth.email')}</p>
                                 <p className="text-lg">{user?.email}</p>
                             </div>
                         </CardContent>
@@ -99,15 +101,15 @@ export default function DashboardPage() {
                     {/* Quick Actions */}
                     <Card className='col-span-2'>
                         <CardHeader>
-                            <CardTitle>Quick Actions</CardTitle>
-                            <CardDescription>Common tasks</CardDescription>
+                            <CardTitle>{t('dashboard.quickActionsCard')}</CardTitle>
+                            <CardDescription>{t('dashboard.commonTasks')}</CardDescription>
                         </CardHeader>
                         <CardContent className="flex flex-wrap gap-3">
                             <Button variant="outline" asChild>
-                                <Link href="/search">Search Vehicles</Link>
+                                <Link href="/search">{t('common.searchVehicles')}</Link>
                             </Button>
                             <Button variant="outline" asChild>
-                                <Link href="/analytics">View Analytics</Link>
+                                <Link href="/analytics">{t('dashboard.viewAnalytics')}</Link>
                             </Button>
                         </CardContent>
                     </Card>
@@ -117,26 +119,36 @@ export default function DashboardPage() {
                         <Card className="hover:shadow-lg transition-shadow cursor-pointer h-full">
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2">
-                                    My Watchlist
+                                    {t('common.myWatchlist')}
                                 </CardTitle>
-                                <CardDescription>Vehicles you're tracking</CardDescription>
+                                <CardDescription>{t('dashboard.vehiclesTracking')}</CardDescription>
                             </CardHeader>
                             <CardContent>
                                 <div className='flex flex-row items-center justify-between'>
                                     <div className='flex flex-col items-center'>
-                                        <p className="text-3xl font-bold">{watchlistCount}</p>
+                                        {
+                                            watchlistCount > 0 ? (
+                                                <p className="text-3xl font-bold">{watchlistCount}</p>
+                                            ) : (
+                                                <p className="text-3xl font-bold">0</p>
+                                            )
+                                        }
                                         <p className="text-sm text-muted-foreground mt-1">
-                                            {watchlistCount === 0 ? 'No vehicles yet' : `Tracked`}
+                                            {watchlistCount === 0 ? t('dashboard.noVehiclesYet') : t('dashboard.tracked')}
                                         </p>
                                     </div>
                                     <div className='flex flex-col items-center'>
-                                        {starredCount > 0 && (
+                                        {starredCount > 0 ? (
                                             <p className='text-3xl font-bold'>
                                                 {starredCount}
                                             </p>
-                                        )}
+                                        ) :
+                                            <p className='text-3xl font-bold'>
+                                                0
+                                            </p>
+                                        }
                                         <p className="text-sm text-muted-foreground mt-1">
-                                            {starredCount === 0 ? 'No starred yet' : `Starred`}
+                                            {starredCount === 0 ? t('dashboard.noStarredYet') : t('dashboard.starred')}
                                         </p>
                                     </div>
                                 </div>
@@ -152,15 +164,15 @@ export default function DashboardPage() {
                         <div>
                             <CardTitle className="flex items-center gap-2">
                                 <Clock className="w-5 h-5" />
-                                Recent Activity
+                                {t('dashboard.recentActivity')}
                             </CardTitle>
-                            <CardDescription>Your latest watchlist additions</CardDescription>
+                            <CardDescription>{t('dashboard.latestAdditions')}</CardDescription>
                         </div>
                         {recentActivity.length > 0 && (
                             <Button variant="ghost" size="sm" asChild>
                                 <Link href="/analytics">
                                     <TrendingUp className="w-4 h-4 mr-2" />
-                                    View All Analytics
+                                    {t('dashboard.viewAllAnalytics')}
                                 </Link>
                             </Button>
                         )}
@@ -169,9 +181,9 @@ export default function DashboardPage() {
                         {recentActivity.length === 0 ? (
                             <div className="text-center py-6">
                                 <Car className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
-                                <p className="text-sm text-muted-foreground mb-3">No recent activity</p>
+                                <p className="text-sm text-muted-foreground mb-3">{t('dashboard.noRecentActivity')}</p>
                                 <Button variant="outline" size="sm" asChild>
-                                    <Link href="/search">Search Vehicles</Link>
+                                    <Link href="/search">{t('common.searchVehicles')}</Link>
                                 </Button>
                             </div>
                         ) : (
@@ -190,7 +202,7 @@ export default function DashboardPage() {
                                                     {activity.manufacturer} {activity.model}
                                                 </p>
                                                 <p className="text-sm text-muted-foreground">
-                                                    Added to watchlist
+                                                    {t('dashboard.addedToWatchlist')}
                                                 </p>
                                             </div>
                                         </div>
@@ -201,7 +213,7 @@ export default function DashboardPage() {
                                                 </span>
                                             </div>
                                             <p className="text-xs text-muted-foreground mt-1">
-                                                {new Date(activity.createdAt).toLocaleDateString('he-IL')}
+                                                {new Date(activity.createdAt).toLocaleDateString(locale === 'he' ? 'he-IL' : 'en-US')}
                                             </p>
                                         </div>
                                     </div>

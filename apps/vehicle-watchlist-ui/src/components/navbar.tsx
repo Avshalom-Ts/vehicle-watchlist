@@ -2,17 +2,20 @@
 
 import React from 'react';
 import { useEffect, useState } from 'react';
-import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
+import { LanguageSwitcher } from '@/components/language-switcher';
 import { Car, User, LogOut, Menu, X } from 'lucide-react';
 import { AuthService } from '@/lib/auth-service';
 import { toast } from 'sonner';
+import { useI18n } from '@/lib/i18n-provider';
 
 export function Navbar() {
     const router = useRouter();
     const pathname = usePathname();
+    const { t } = useI18n();
     const [user, setUser] = useState<{ id: string; email: string; name: string } | null>(null);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -46,7 +49,7 @@ export function Navbar() {
         setIsAuthenticated(false);
         setUser(null);
         setIsMobileMenuOpen(false);
-        toast.success('Logged out successfully');
+        toast.success(t('auth.logoutSuccess'));
         router.push('/login');
     };
 
@@ -61,11 +64,12 @@ export function Navbar() {
                     {/* Logo */}
                     <Link href="/" className="flex items-center gap-2 font-semibold text-xl">
                         <Car className="h-6 w-6" />
-                        <span className="sm:inline">Vehicle Watchlist</span>
+                        <span className="sm:inline">{t('common.vehicleWatchlist')}</span>
                     </Link>
 
                     {/* Desktop Navigation */}
                     <div className="hidden md:flex items-center gap-3">
+                        <LanguageSwitcher />
                         <ThemeToggle />
                         {isAuthenticated && user ? (
                             <>
@@ -77,16 +81,16 @@ export function Navbar() {
                                 </Button>
                                 <Button variant="outline" onClick={handleLogout}>
                                     <LogOut className="h-4 w-4 mr-2" />
-                                    Logout
+                                    {t('common.logout')}
                                 </Button>
                             </>
                         ) : (
                             <>
                                 <Button variant="ghost" asChild>
-                                    <Link href="/login">Login</Link>
+                                    <Link href="/login">{t('common.login')}</Link>
                                 </Button>
                                 <Button asChild>
-                                    <Link href="/register">Register</Link>
+                                    <Link href="/register">{t('common.register')}</Link>
                                 </Button>
                             </>
                         )}
@@ -94,6 +98,7 @@ export function Navbar() {
 
                     {/* Mobile Menu Button */}
                     <div className="flex md:hidden items-center gap-2">
+                        <LanguageSwitcher />
                         <ThemeToggle />
                         <Button
                             variant="ghost"
@@ -118,7 +123,7 @@ export function Navbar() {
                                 <>
                                     <div className="flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground">
                                         <User className="h-4 w-4" />
-                                        Signed in as <span className="font-medium text-foreground">{user.name}</span>
+                                        {t('navbar.signedInAs')} <span className="font-medium text-foreground">{user.name}</span>
                                     </div>
                                     <div className="border-t pt-3 space-y-1">
                                         <Button
@@ -129,7 +134,7 @@ export function Navbar() {
                                         >
                                             <Link href="/dashboard">
                                                 <User className="h-4 w-4 mr-2" />
-                                                Dashboard
+                                                {t('common.dashboard')}
                                             </Link>
                                         </Button>
                                         <Button
@@ -140,7 +145,7 @@ export function Navbar() {
                                         >
                                             <Link href="/search">
                                                 <Car className="h-4 w-4 mr-2" />
-                                                Search Vehicles
+                                                {t('common.searchVehicles')}
                                             </Link>
                                         </Button>
                                         <Button
@@ -151,7 +156,7 @@ export function Navbar() {
                                         >
                                             <Link href="/watchlist">
                                                 <Car className="h-4 w-4 mr-2" />
-                                                My Watchlist
+                                                {t('common.myWatchlist')}
                                             </Link>
                                         </Button>
                                         <Button
@@ -162,7 +167,7 @@ export function Navbar() {
                                         >
                                             <Link href="/analytics">
                                                 <Car className="h-4 w-4 mr-2" />
-                                                Analytics
+                                                {t('common.analytics')}
                                             </Link>
                                         </Button>
                                     </div>
@@ -173,7 +178,7 @@ export function Navbar() {
                                             onClick={handleLogout}
                                         >
                                             <LogOut className="h-4 w-4 mr-2" />
-                                            Logout
+                                            {t('common.logout')}
                                         </Button>
                                     </div>
                                 </>
@@ -185,14 +190,14 @@ export function Navbar() {
                                         asChild
                                         onClick={closeMobileMenu}
                                     >
-                                        <Link href="/login">Login</Link>
+                                        <Link href="/login">{t('common.login')}</Link>
                                     </Button>
                                     <Button
                                         className="w-full"
                                         asChild
                                         onClick={closeMobileMenu}
                                     >
-                                        <Link href="/register">Register</Link>
+                                        <Link href="/register">{t('common.register')}</Link>
                                     </Button>
                                 </div>
                             )}

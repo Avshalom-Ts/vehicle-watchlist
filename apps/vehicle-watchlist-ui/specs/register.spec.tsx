@@ -47,13 +47,13 @@ describe('RegisterPage', () => {
         render(<RegisterPage />);
 
         await waitFor(() => {
-            expect(screen.getByRole('heading', { name: /create account/i })).toBeInTheDocument();
+            expect(screen.getByRole('heading', { name: /sign up/i })).toBeInTheDocument();
         });
         expect(screen.getByLabelText(/name/i)).toBeInTheDocument();
         expect(screen.getByLabelText(/^email$/i)).toBeInTheDocument();
         expect(screen.getByLabelText(/^password$/i)).toBeInTheDocument();
         expect(screen.getByLabelText(/confirm password/i)).toBeInTheDocument();
-        expect(screen.getByRole('button', { name: /create account/i })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /sign up/i })).toBeInTheDocument();
     });
 
     it('should show validation error for short name', async () => {
@@ -64,7 +64,7 @@ describe('RegisterPage', () => {
         });
 
         const nameInput = screen.getByLabelText(/name/i);
-        const form = screen.getByRole('button', { name: /create account/i }).closest('form')!;
+        const form = screen.getByRole('button', { name: /sign up/i }).closest('form')!;
 
         fireEvent.change(nameInput, { target: { value: 'A' } });
         fireEvent.submit(form);
@@ -85,7 +85,7 @@ describe('RegisterPage', () => {
 
         const nameInput = screen.getByLabelText(/name/i);
         const emailInput = screen.getByLabelText(/^email$/i);
-        const form = screen.getByRole('button', { name: /create account/i }).closest('form')!;
+        const form = screen.getByRole('button', { name: /sign up/i }).closest('form')!;
 
         fireEvent.change(nameInput, { target: { value: 'Test User' } });
         fireEvent.change(emailInput, { target: { value: 'invalid-email' } });
@@ -98,6 +98,90 @@ describe('RegisterPage', () => {
         expect(AuthService.register).not.toHaveBeenCalled();
     });
 
+    it('should show error for disposable email addresses', async () => {
+        (AuthService.register as jest.Mock).mockRejectedValueOnce(
+            new Error('Disposable email addresses are not allowed')
+        );
+
+        render(<RegisterPage />);
+
+        await waitFor(() => {
+            expect(screen.getByLabelText(/name/i)).toBeInTheDocument();
+        });
+
+        const nameInput = screen.getByLabelText(/name/i);
+        const emailInput = screen.getByLabelText(/^email$/i);
+        const passwordInput = screen.getByLabelText(/^password$/i);
+        const confirmPasswordInput = screen.getByLabelText(/confirm password/i);
+        const submitButton = screen.getByRole('button', { name: /sign up/i });
+
+        fireEvent.change(nameInput, { target: { value: 'Test User' } });
+        fireEvent.change(emailInput, { target: { value: 'test@10minutemail.com' } });
+        fireEvent.change(passwordInput, { target: { value: 'Test1234' } });
+        fireEvent.change(confirmPasswordInput, { target: { value: 'Test1234' } });
+        fireEvent.click(submitButton);
+
+        await waitFor(() => {
+            expect(AuthService.register).toHaveBeenCalledWith({
+                name: 'Test User',
+                email: 'test@10minutemail.com',
+                password: 'Test1234',
+            });
+        });
+
+        await waitFor(() => {
+            expect(toast.error).toHaveBeenCalledWith('Disposable email addresses are not allowed');
+        });
+
+        expect(mockPush).not.toHaveBeenCalled();
+    });
+
+    it('should accept valid email from legitimate provider', async () => {
+        const mockResponse = {
+            access_token: 'mock-token',
+            refresh_token: 'mock-refresh',
+            user: {
+                id: '123',
+                email: 'user@gmail.com',
+                name: 'Test User',
+            },
+        };
+
+        (AuthService.register as jest.Mock).mockResolvedValueOnce(mockResponse);
+
+        render(<RegisterPage />);
+
+        await waitFor(() => {
+            expect(screen.getByLabelText(/name/i)).toBeInTheDocument();
+        });
+
+        const nameInput = screen.getByLabelText(/name/i);
+        const emailInput = screen.getByLabelText(/^email$/i);
+        const passwordInput = screen.getByLabelText(/^password$/i);
+        const confirmPasswordInput = screen.getByLabelText(/confirm password/i);
+        const submitButton = screen.getByRole('button', { name: /sign up/i });
+
+        fireEvent.change(nameInput, { target: { value: 'Test User' } });
+        fireEvent.change(emailInput, { target: { value: 'user@gmail.com' } });
+        fireEvent.change(passwordInput, { target: { value: 'Test1234' } });
+        fireEvent.change(confirmPasswordInput, { target: { value: 'Test1234' } });
+        fireEvent.click(submitButton);
+
+        await waitFor(() => {
+            expect(AuthService.register).toHaveBeenCalledWith({
+                name: 'Test User',
+                email: 'user@gmail.com',
+                password: 'Test1234',
+            });
+        });
+
+        expect(toast.success).toHaveBeenCalledWith('Account created successfully!');
+
+        await waitFor(() => {
+            expect(mockPush).toHaveBeenCalledWith('/dashboard');
+        }, { timeout: 1500 });
+    });
+
     it('should show validation error for short password', async () => {
         render(<RegisterPage />);
 
@@ -108,7 +192,7 @@ describe('RegisterPage', () => {
         const nameInput = screen.getByLabelText(/name/i);
         const emailInput = screen.getByLabelText(/^email$/i);
         const passwordInput = screen.getByLabelText(/^password$/i);
-        const form = screen.getByRole('button', { name: /create account/i }).closest('form')!;
+        const form = screen.getByRole('button', { name: /sign up/i }).closest('form')!;
 
         fireEvent.change(nameInput, { target: { value: 'Test User' } });
         fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
@@ -132,7 +216,7 @@ describe('RegisterPage', () => {
         const nameInput = screen.getByLabelText(/name/i);
         const emailInput = screen.getByLabelText(/^email$/i);
         const passwordInput = screen.getByLabelText(/^password$/i);
-        const form = screen.getByRole('button', { name: /create account/i }).closest('form')!;
+        const form = screen.getByRole('button', { name: /sign up/i }).closest('form')!;
 
         fireEvent.change(nameInput, { target: { value: 'Test User' } });
         fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
@@ -156,7 +240,7 @@ describe('RegisterPage', () => {
         const nameInput = screen.getByLabelText(/name/i);
         const emailInput = screen.getByLabelText(/^email$/i);
         const passwordInput = screen.getByLabelText(/^password$/i);
-        const form = screen.getByRole('button', { name: /create account/i }).closest('form')!;
+        const form = screen.getByRole('button', { name: /sign up/i }).closest('form')!;
 
         fireEvent.change(nameInput, { target: { value: 'Test User' } });
         fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
@@ -180,7 +264,7 @@ describe('RegisterPage', () => {
         const nameInput = screen.getByLabelText(/name/i);
         const emailInput = screen.getByLabelText(/^email$/i);
         const passwordInput = screen.getByLabelText(/^password$/i);
-        const form = screen.getByRole('button', { name: /create account/i }).closest('form')!;
+        const form = screen.getByRole('button', { name: /sign up/i }).closest('form')!;
 
         fireEvent.change(nameInput, { target: { value: 'Test User' } });
         fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
@@ -205,7 +289,7 @@ describe('RegisterPage', () => {
         const emailInput = screen.getByLabelText(/^email$/i);
         const passwordInput = screen.getByLabelText(/^password$/i);
         const confirmPasswordInput = screen.getByLabelText(/confirm password/i);
-        const form = screen.getByRole('button', { name: /create account/i }).closest('form')!;
+        const form = screen.getByRole('button', { name: /sign up/i }).closest('form')!;
 
         fireEvent.change(nameInput, { target: { value: 'Test User' } });
         fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
@@ -243,7 +327,7 @@ describe('RegisterPage', () => {
         const emailInput = screen.getByLabelText(/^email$/i);
         const passwordInput = screen.getByLabelText(/^password$/i);
         const confirmPasswordInput = screen.getByLabelText(/confirm password/i);
-        const submitButton = screen.getByRole('button', { name: /create account/i });
+        const submitButton = screen.getByRole('button', { name: /sign up/i });
 
         fireEvent.change(nameInput, { target: { value: 'Test User' } });
         fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
@@ -279,7 +363,7 @@ describe('RegisterPage', () => {
         const emailInput = screen.getByLabelText(/^email$/i);
         const passwordInput = screen.getByLabelText(/^password$/i);
         const confirmPasswordInput = screen.getByLabelText(/confirm password/i);
-        const submitButton = screen.getByRole('button', { name: /create account/i });
+        const submitButton = screen.getByRole('button', { name: /sign up/i });
 
         fireEvent.change(nameInput, { target: { value: 'Test User' } });
         fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
@@ -309,7 +393,7 @@ describe('RegisterPage', () => {
         const emailInput = screen.getByLabelText(/^email$/i);
         const passwordInput = screen.getByLabelText(/^password$/i);
         const confirmPasswordInput = screen.getByLabelText(/confirm password/i);
-        const submitButton = screen.getByRole('button', { name: /create account/i });
+        const submitButton = screen.getByRole('button', { name: /sign up/i });
 
         fireEvent.change(nameInput, { target: { value: 'Test User' } });
         fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
@@ -342,7 +426,7 @@ describe('RegisterPage', () => {
         });
 
         const nameInput = screen.getByLabelText(/name/i);
-        const form = screen.getByRole('button', { name: /create account/i }).closest('form')!;
+        const form = screen.getByRole('button', { name: /sign up/i }).closest('form')!;
 
         // Trigger validation error
         fireEvent.change(nameInput, { target: { value: 'A' } });
@@ -373,7 +457,7 @@ describe('RegisterPage', () => {
         const emailInput = screen.getByLabelText(/^email$/i);
         const passwordInput = screen.getByLabelText(/^password$/i);
         const confirmPasswordInput = screen.getByLabelText(/confirm password/i);
-        const submitButton = screen.getByRole('button', { name: /create account/i });
+        const submitButton = screen.getByRole('button', { name: /sign up/i });
 
         fireEvent.change(nameInput, { target: { value: 'Test User' } });
         fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
@@ -386,3 +470,4 @@ describe('RegisterPage', () => {
         });
     });
 });
+

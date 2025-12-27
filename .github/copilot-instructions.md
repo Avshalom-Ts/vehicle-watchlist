@@ -8,15 +8,15 @@ Build a web application that allows users to search for Israeli vehicle informat
 
 ## Tech Stack Requirements
 
-| Category               | Technology                                            |
-| ---------------------- | ----------------------------------------------------- |
-| **Language**           | TypeScript (Strict mode enabled)                      |
-| **Frontend**           | React (Next.js), Tailwind CSS, **shadcn/ui**          |
-| **Backend**            | Node.js (NestJS)                                      |
-| **Database**           | MongoDB                                               |
-| **Validation**         | Zod (for both API input and Frontend form validation) |
-| **Infrastructure**     | Docker, Docker Compose, GitHub Actions                |
-| **Package Management** | bun                                                   |
+| Category            | Technology                                            |
+| ------------------- | ----------------------------------------------------- |
+| **Language**        | TypeScript (Strict mode enabled)                      |
+| **Frontend**        | React (Next.js), Tailwind CSS, **shadcn/ui**          |
+| **Backend**         | Node.js (NestJS)                                      |
+| **Database**        | MongoDB                                               |
+| **Validation**      | Zod (for both API input and Frontend form validation) |
+| **Infrastructure**  | Docker, Docker Compose, GitHub Actions                |
+| **Package Manager** | bun                                                   |
 
 > **Note**: shadcn/ui is built on top of Radix UI primitives. Components using `@radix-ui/*` imports with Tailwind styling are the correct shadcn/ui pattern.
 

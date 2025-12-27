@@ -38,7 +38,7 @@ FROM nginx:alpine AS runner
 COPY --from=builder /app/dist/apps/vehicle-watchlist-ui /usr/share/nginx/html
 
 # Copy nginx config
-COPY docker/frontent/nginx.conf /etc/nginx/nginx.conf
+COPY docker/frontend/nginx.conf /etc/nginx/nginx.conf
 
 # Expose port
 EXPOSE 4200

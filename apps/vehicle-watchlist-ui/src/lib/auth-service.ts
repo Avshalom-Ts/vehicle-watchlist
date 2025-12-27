@@ -1,4 +1,4 @@
-import type { RegisterDto, LoginDto, AuthResponse } from '@vehicle-watchlist/utils';
+import type { RegisterDto, LoginDto } from '@vehicle-watchlist/utils';
 
 // Use relative URL so it works on any domain (localhost, CodeSandbox, production)
 const API_URL = process.env.NEXT_PUBLIC_API_URL || '/api';
@@ -7,6 +7,14 @@ interface ApiError {
     message: string;
     statusCode?: number;
     error?: string;
+}
+
+interface AuthResponseWithoutTokens {
+    user: {
+        id: string;
+        email: string;
+        name: string;
+    };
 }
 
 export class AuthService {
@@ -20,56 +28,64 @@ export class AuthService {
         return response.json();
     }
 
-    static async register(data: RegisterDto): Promise<AuthResponse> {
+    static async register(data: RegisterDto): Promise<AuthResponseWithoutTokens> {
         const response = await fetch(`${API_URL}/auth/register`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
+            credentials: 'include', // Important: send and receive cookies
             body: JSON.stringify(data),
         });
 
-        const result = await this.handleResponse<AuthResponse>(response);
+        const result = await this.handleResponse<AuthResponseWithoutTokens>(response);
 
-        // Store tokens in localStorage
-        if (result.access_token) {
-            localStorage.setItem('access_token', result.access_token);
-            localStorage.setItem('refresh_token', result.refresh_token);
+        // Store user info in localStorage (tokens are in HTTP-only cookies)
+        if (result.user) {
             localStorage.setItem('user', JSON.stringify(result.user));
         }
 
         return result;
     }
 
-    static async login(data: LoginDto): Promise<AuthResponse> {
+    static async login(data: LoginDto): Promise<AuthResponseWithoutTokens> {
         const response = await fetch(`${API_URL}/auth/login`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
+            credentials: 'include', // Important: send and receive cookies
             body: JSON.stringify(data),
         });
 
-        const result = await this.handleResponse<AuthResponse>(response);
+        const result = await this.handleResponse<AuthResponseWithoutTokens>(response);
 
-        // Store tokens in localStorage
-        if (result.access_token) {
-            localStorage.setItem('access_token', result.access_token);
-            localStorage.setItem('refresh_token', result.refresh_token);
+        // Store user info in localStorage (tokens are in HTTP-only cookies)
+        if (result.user) {
             localStorage.setItem('user', JSON.stringify(result.user));
         }
 
         return result;
     }
 
-    static logout(): void {
-        localStorage.removeItem('access_token');
-        localStorage.removeItem('refresh_token');
-        localStorage.removeItem('user');
+    static async logout(): Promise<void> {
+        try {
+            await fetch(`${API_URL}/auth/logout`, {
+                method: 'POST',
+                credentials: 'include', // Important: send cookies
+            });
+        } catch (error) {
+            console.error('Logout failed:', error);
+        } finally {
+            // Always clear local storage
+            localStorage.removeItem('user');
+        }
     }
 
     static getAccessToken(): string | null {
-        return localStorage.getItem('access_token');
+        // Tokens are in HTTP-only cookies, not accessible from JavaScript
+        // This method is kept for backward compatibility but returns null
+        return null;
     }
 
     static getUser(): { id: string; email: string; name: string } | null {
@@ -78,6 +94,8 @@ export class AuthService {
     }
 
     static isAuthenticated(): boolean {
-        return !!this.getAccessToken();
+        // Check if user info exists in localStorage
+        // The actual JWT token is in HTTP-only cookies
+        return !!this.getUser();
     }
 }

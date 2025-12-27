@@ -1,5 +1,3 @@
-import { AuthService } from './auth-service';
-
 // Use relative URL so it works on any domain (localhost, CodeSandbox, production)
 const API_URL = process.env.NEXT_PUBLIC_API_URL || '/api';
 
@@ -23,10 +21,9 @@ export interface AnalyticsData {
 
 export class AnalyticsService {
     private static getAuthHeaders(): HeadersInit {
-        const token = AuthService.getAccessToken();
+        // Tokens are now in HTTP-only cookies, no need for Authorization header
         return {
             'Content-Type': 'application/json',
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
         };
     }
 
@@ -38,6 +35,7 @@ export class AnalyticsService {
             const response = await fetch(`${API_URL}/watchlist/analytics`, {
                 method: 'GET',
                 headers: this.getAuthHeaders(),
+                credentials: 'include',
             });
 
             if (!response.ok) {

@@ -17,10 +17,12 @@ import {
     CardTitle,
 } from '@/components/ui/card';
 import { AuthService } from '@/lib/auth-service';
+import { useI18n } from '@/lib/i18n-provider';
 
 function LoginContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
+    const { t } = useI18n();
     const redirectUrl = searchParams.get('redirect') || '/dashboard';
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -43,13 +45,13 @@ function LoginContent() {
         const trimmedEmail = email.trim();
 
         if (trimmedEmail.length === 0) {
-            newErrors.email = 'Email is required';
+            newErrors.email = t('auth.validation.emailRequired');
         } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
-            newErrors.email = 'Invalid email address';
+            newErrors.email = t('auth.validation.emailInvalid');
         }
 
         if (password.length < 1) {
-            newErrors.password = 'Password is required';
+            newErrors.password = t('auth.validation.passwordRequired');
         }
 
         setErrors(newErrors);
@@ -72,12 +74,12 @@ function LoginContent() {
                 password,
             });
 
-            toast.success('Welcome back!');
+            toast.success(t('auth.welcomeBack'));
 
             // Redirect to the intended page or dashboard after successful login
             router.push(redirectUrl);
         } catch (error) {
-            toast.error(error instanceof Error ? error.message : 'Login failed. Please check your credentials.');
+            toast.error(error instanceof Error ? error.message : t('auth.loginFailed'));
             setIsLoading(false);
         }
     };
@@ -87,20 +89,20 @@ function LoginContent() {
             <Card className="w-full max-w-md">
                 <CardHeader className="space-y-1">
                     <CardTitle className="text-3xl font-bold text-center">
-                        Sign In
+                        {t('auth.signIn')}
                     </CardTitle>
                     <CardDescription className="text-center">
-                        Enter your credentials to access your account
+                        {t('auth.signInDescription')}
                     </CardDescription>
                 </CardHeader>
                 <form onSubmit={handleSubmit}>
                     <CardContent className="space-y-4">
                         <div className="space-y-2">
-                            <Label htmlFor="email">Email</Label>
+                            <Label htmlFor="email">{t('auth.email')}</Label>
                             <Input
                                 id="email"
                                 type="text"
-                                placeholder="name@example.com"
+                                placeholder={t('auth.emailPlaceholder')}
                                 value={email}
                                 onChange={(e) => {
                                     setEmail(e.target.value);
@@ -119,11 +121,11 @@ function LoginContent() {
                             )}
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="password">Password</Label>
+                            <Label htmlFor="password">{t('auth.password')}</Label>
                             <Input
                                 id="password"
                                 type="password"
-                                placeholder="Enter your password"
+                                placeholder={t('auth.passwordPlaceholder')}
                                 value={password}
                                 onChange={(e) => {
                                     setPassword(e.target.value);
@@ -145,15 +147,15 @@ function LoginContent() {
                             className="w-full"
                             disabled={isLoading}
                         >
-                            {isLoading ? 'Signing in...' : 'Sign In'}
+                            {isLoading ? t('auth.signingIn') : t('auth.signInButton')}
                         </Button>
                         <p className="text-sm text-center text-muted-foreground">
-                            Don't have an account?{' '}
+                            {t('auth.dontHaveAccount')}{' '}
                             <Link
                                 href={redirectUrl !== '/dashboard' ? `/register?redirect=${encodeURIComponent(redirectUrl)}` : '/register'}
                                 className="text-primary hover:underline font-medium"
                             >
-                                Sign up
+                                {t('auth.signUpHere')}
                             </Link>
                         </p>
                     </CardFooter>
